@@ -39,14 +39,19 @@ public:
 
 	};
 
-	CPlayer *player;
+	CPlayer *player = nullptr;
 
 	sf::Font MyFont;
+
+	float step = (1.0f / 60.0f); // Modify this to change physics rate.
 
 	int state = 0;
 	int menuState = 2;
 	bool frozenMenu = false;
 	bool frozenEnter = false;
+
+	int quitTimer = 3500;
+	int debugTimer = 2500;
 
 	int volume = 100;
 };

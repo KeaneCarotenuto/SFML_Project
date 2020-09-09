@@ -16,6 +16,8 @@ void Credits();
 int FixedUpdate();
 void Input();
 
+void CreateText(std::string _string, int _fontSize, sf::Color _colour, sf::Text::Style, float _x , float _y, std::vector<sf::Drawable*>& vector);
+
 void Draw(sf::RenderWindow& window);
 
 
@@ -32,7 +34,6 @@ int main()
 
 	Start();
 
-	float step = (1.0f / 60.0f); // Modify this to change physics rate.
 	float stepTime = 0;
 	bool drawn = false;
 
@@ -43,11 +44,11 @@ int main()
 		stepTime += clock.getElapsedTime().asSeconds();
 		clock.restart();
 
-		while (stepTime >= step)
+		while (stepTime >= game.step)
 		{
 			if (FixedUpdate() == 0) return 0;
 
-			stepTime -= step;
+			stepTime -= game.step;
 			drawn = false;
 		}
 
@@ -90,134 +91,54 @@ void Start() {
 
 #pragma region "Menu Drawables"
 	//Title
-	sf::Text *M_title =  new sf::Text;
-	M_title->setString("Space Invaders");
-	M_title->setCharacterSize(50);
-	M_title->setFillColor(sf::Color::White);
-	M_title->setStyle(sf::Text::Style::Bold);
-	M_title->setPosition(30, 30);
-	game.MenuDraw.push_back(M_title);
-
+	CreateText("Space Invaders", 55, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.MenuDraw);
 	//Subtitle
-	sf::Text* M_subtitle = new sf::Text;
-	M_subtitle->setString("By Keane Carotenuto");
-	M_subtitle->setCharacterSize(16);
-	M_subtitle->setFillColor(sf::Color::Color(180,180,180,255));
-	M_subtitle->setStyle(sf::Text::Style::Italic);
-	M_subtitle->setPosition(30, 100);
-	game.MenuDraw.push_back(M_subtitle);
-
+	CreateText("By Keane Carotenuto", 16, sf::Color::Color(180, 180, 180, 255), sf::Text::Style::Italic, 30, 100, game.MenuDraw);
 	//Play
-	sf::Text* M_playText = new sf::Text;
-	M_playText->setString("Play");
-	M_playText->setCharacterSize(30);
-	M_playText->setFillColor(sf::Color::White);
-	M_playText->setPosition(30, 150);
-	game.MenuDraw.push_back(M_playText);
-
+	CreateText("Play", 30, sf::Color::White, sf::Text::Style::Regular, 30, 150, game.MenuDraw);
 	//Options
-	sf::Text* M_optionsText = new sf::Text;
-	M_optionsText->setString("Options");
-	M_optionsText->setCharacterSize(30);
-	M_optionsText->setFillColor(sf::Color::White);
-	M_optionsText->setPosition(30, 200);
-	game.MenuDraw.push_back(M_optionsText);
-
+	CreateText("Options", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.MenuDraw);
 	//Credit
-	sf::Text* creditText = new sf::Text;
-	creditText->setString("Credits");
-	creditText->setCharacterSize(30);
-	creditText->setFillColor(sf::Color::White);
-	creditText->setPosition(30, 250);
-	game.MenuDraw.push_back(creditText);
-
+	CreateText("Credits", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.MenuDraw);
 	//Exit
-	sf::Text* M_exitText = new sf::Text;
-	M_exitText->setString("Exit");
-	M_exitText->setCharacterSize(30);
-	M_exitText->setFillColor(sf::Color::White);
-	M_exitText->setPosition(30, 300);
-	game.MenuDraw.push_back(M_exitText);
+	CreateText("Exit", 30, sf::Color::White, sf::Text::Style::Regular, 30, 300, game.MenuDraw);
 #pragma endregion
 
 #pragma region "Options Drawables"
 	//Title
-	sf::Text* O_title = new sf::Text;
-	O_title->setString("Options");
-	O_title->setCharacterSize(50);
-	O_title->setFillColor(sf::Color::White);
-	O_title->setStyle(sf::Text::Style::Bold);
-	O_title->setPosition(30, 30);
-	game.OptionsDraw.push_back(O_title);
-
+	CreateText("Options", 55, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.OptionsDraw);
 	//Subtitle
-	sf::Text* O_subtitle = new sf::Text;
-	O_subtitle->setString("Press Enter To Scroll Through Options");
-	O_subtitle->setCharacterSize(16);
-	O_subtitle->setFillColor(sf::Color::Color(180, 180, 180, 255));
-	O_subtitle->setStyle(sf::Text::Style::Italic);
-	O_subtitle->setPosition(30, 100);
-	game.OptionsDraw.push_back(O_subtitle);
-
+	CreateText("Press Enter To Scroll Through an Option", 16, sf::Color::Color(180, 180, 180, 255), sf::Text::Style::Italic, 30, 100, game.OptionsDraw);
 	//Volume
-	sf::Text* O_volumeText = new sf::Text;
-	O_volumeText->setString("Volume: " + std::to_string(game.volume));
-	O_volumeText->setCharacterSize(30);
-	O_volumeText->setFillColor(sf::Color::White);
-	O_volumeText->setPosition(30, 150);
-	game.OptionsDraw.push_back(O_volumeText);
-
+	CreateText("Volume: " + std::to_string(game.volume), 30, sf::Color::White, sf::Text::Style::Regular, 30, 150, game.OptionsDraw);
 	//Return
-	sf::Text* O_returnText = new sf::Text;
-	O_returnText->setString("Return");
-	O_returnText->setCharacterSize(30);
-	O_returnText->setFillColor(sf::Color::White);
-	O_returnText->setPosition(30, 200);
-	game.OptionsDraw.push_back(O_returnText);
+	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.OptionsDraw);
+
+	CreateText("Controls: ", 40, sf::Color::White, sf::Text::Style::Regular, 30, 280, game.OptionsDraw);
+
+	int _y = 340;
+	CreateText("Menus: ", 25, sf::Color::White, sf::Text::Style::Regular, 400, _y, game.OptionsDraw);
+	CreateText("-Up/Down Keys to Move \nSelection", 20, sf::Color::White, sf::Text::Style::Regular, 400, _y+30, game.OptionsDraw);
+	CreateText("-Enter to Accept Selection", 20, sf::Color::White, sf::Text::Style::Regular, 400, _y+90, game.OptionsDraw);
+
+	CreateText("Game: ", 25, sf::Color::White, sf::Text::Style::Regular, 30, _y, game.OptionsDraw);
+	CreateText("-Left/Right Keys to Move \nLeft and Right", 20, sf::Color::White, sf::Text::Style::Regular, 30, _y+30, game.OptionsDraw);
+	CreateText("-Space to Shoot", 20, sf::Color::White, sf::Text::Style::Regular, 30, _y+90, game.OptionsDraw);
+	CreateText("-Hold Escape to return to Menu", 20, sf::Color::White, sf::Text::Style::Regular, 30, _y+120, game.OptionsDraw);
+	CreateText("-Hold Tab to Open to Debug", 20, sf::Color::White, sf::Text::Style::Regular, 30, _y+150, game.OptionsDraw);
 #pragma endregion
 
 #pragma region "Credits Drawables"
 	//Title
-	sf::Text* C_title = new sf::Text;
-	C_title->setString("Credits");
-	C_title->setCharacterSize(50);
-	C_title->setFillColor(sf::Color::White);
-	C_title->setStyle(sf::Text::Style::Bold);
-	C_title->setPosition(30, 30);
-	game.CreditsDraw.push_back(C_title);
-
+	CreateText("Credits", 50, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.CreditsDraw);
 	//Subtitle
-	sf::Text* C_subtitle = new sf::Text;
-	C_subtitle->setString("Programmed by Keane Carotenuto");
-	C_subtitle->setCharacterSize(16);
-	C_subtitle->setFillColor(sf::Color::Color(180, 180, 180, 255));
-	C_subtitle->setStyle(sf::Text::Style::Italic);
-	C_subtitle->setPosition(30, 100);
-	game.CreditsDraw.push_back(C_subtitle);
-
+	CreateText("KeaneCarotenuto@gmail.com", 16, sf::Color::Color(180, 180, 180, 255), sf::Text::Style::Italic, 30, 100, game.CreditsDraw);
 	//Credit1
-	sf::Text* C_Cred1 = new sf::Text;
-	C_Cred1->setString("Programmer: Keane Carotenuto");
-	C_Cred1->setCharacterSize(30);
-	C_Cred1->setFillColor(sf::Color::White);
-	C_Cred1->setPosition(30, 150);
-	game.CreditsDraw.push_back(C_Cred1);
-
-	//Credit1
-	sf::Text* C_Cred2 = new sf::Text;
-	C_Cred2->setString("Sound: Keane Carotenuto");
-	C_Cred2->setCharacterSize(30);
-	C_Cred2->setFillColor(sf::Color::White);
-	C_Cred2->setPosition(30, 200);
-	game.CreditsDraw.push_back(C_Cred2);
-
+	CreateText("Programmer: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 150, game.CreditsDraw);
+	//Credit2
+	CreateText("Sound: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.CreditsDraw);
 	//Return
-	sf::Text* C_returnText = new sf::Text;
-	C_returnText->setString("Return");
-	C_returnText->setCharacterSize(30);
-	C_returnText->setFillColor(sf::Color::White);
-	C_returnText->setPosition(30, 250);
-	game.CreditsDraw.push_back(C_returnText);
+	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.CreditsDraw);
 #pragma endregion
 }
 
@@ -411,8 +332,34 @@ void Input() {
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 	{
-		
+		CreateText("Hold Escape for  " + std::to_string(game.quitTimer / 1000) + "s  To Quit" , 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
+		game.quitTimer -= (game.step)*1000 ;
+
+		if (game.quitTimer < 0) game.state = 0;
 	}
+	else {
+		game.quitTimer = 3500;
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab))
+	{
+		CreateText("Hold Tab for  " + std::to_string(game.debugTimer / 1000) + "s  To Open Debug", 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
+		game.debugTimer -= (game.step) * 1000;
+
+		if (game.debugTimer < 0) game.state = 0;
+	}
+	else {
+		game.debugTimer = 2500;
+	}
+}
+
+void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _colour = sf::Color::White, sf::Text::Style _style = sf::Text::Style::Regular, float _x = 100, float _y = 100, std::vector<sf::Drawable*>& vector = game.toDraw ) {
+	sf::Text* tempText = new sf::Text;
+	tempText->setString(_string);
+	tempText->setCharacterSize(_fontSize);
+	tempText->setFillColor(_colour);
+	tempText->setStyle(_style);
+	tempText->setPosition(_x, _y);
+	vector.push_back(tempText);
 }
 
 void Draw(sf::RenderWindow& window) {
