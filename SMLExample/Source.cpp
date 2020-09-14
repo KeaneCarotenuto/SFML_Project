@@ -1,6 +1,6 @@
 #include <vector>
 #include <string>
-#include"SFML/Graphics.hpp"
+#include <SFML/Graphics.hpp>
 
 #include"CGame.h"
 #include"CPlayer.h"
@@ -16,7 +16,7 @@ void Credits();
 int FixedUpdate();
 void Input();
 
-void CreateText(std::string _string, int _fontSize, sf::Color _colour, sf::Text::Style, float _x , float _y, std::vector<sf::Drawable*>& vector);
+void CreateText(std::string _string, int _fontSize, sf::Color _colour, sf::Text::Style _style, float _x , float _y, std::vector<sf::Drawable*>& vector);
 
 void Draw(sf::RenderWindow& window);
 
@@ -39,7 +39,7 @@ int main()
 
 	sf::Clock clock;
 
-	while (window.isOpen())
+	while (true)
 	{
 		stepTime += clock.getElapsedTime().asSeconds();
 		clock.restart();
@@ -50,6 +50,8 @@ int main()
 
 			stepTime -= game.step;
 			drawn = false;
+
+			Draw(window);
 		}
 
 		if (drawn)
@@ -64,15 +66,15 @@ int main()
 		}
 
 
-		sf::Event newEvent;
+		//sf::Event newEvent;
 
-		while (window.pollEvent(newEvent))
+		/*while (window.pollEvent(newEvent))
 		{
 			if (newEvent.type == sf::Event::Closed)
 			{
 				window.close();
 			}
-		}
+		}*/
 	}
 
 	return 0;
@@ -373,8 +375,6 @@ void Draw(sf::RenderWindow& window) {
 
 		window.draw((*item));
 	}
-
-	//window.draw(*(game.player->rect));
 
 	window.display();
 }
