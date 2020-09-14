@@ -1,12 +1,10 @@
 #include <vector>
 #include <string>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include"CGame.h"
 #include"CPlayer.h"
-
-
-
 
 void Start();
 void Menu();
@@ -366,6 +364,9 @@ void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _col
 
 void Draw(sf::RenderWindow& window) {
 	window.clear();
+	if (window.isOpen() == true) {
+		std::cout << "here";
+	}
 
 	for (sf::Drawable* item : game.toDraw)
 	{
