@@ -3,6 +3,8 @@
 #include <SFML/Graphics.hpp>
 
 #include"CPlayer.h"
+#include"CEnemyManager.h"
+#include"CEnemy.h"
 
 class CGame
 {
@@ -39,7 +41,11 @@ public:
 
 	};
 
+	sf::Window* mainWindow;
+	sf::Window* debugWindow;
+
 	CPlayer *player = nullptr;
+	CEnemyManager *enemyManager = nullptr;
 
 	sf::Font MyFont;
 

@@ -5,6 +5,8 @@
 
 #include"CGame.h"
 #include"CPlayer.h"
+#include"CEnemyManager.h"
+#include"CEnemy.h"
 
 void Start();
 void Menu();
@@ -20,10 +22,21 @@ void Draw(sf::RenderWindow& window);
 
 
 CGame game;
+CEnemyManager enemyManager;
 
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Space Invaders - By Keane Carotenuto");
+	sf::RenderWindow debugWindow(sf::VideoMode(300, 300), "DEBUG WINDOW");
+	debugWindow.setPosition(sf::Vector2i(window.getPosition().x + window.getSize().x, window.getPosition().y));
+
+	game.mainWindow = &window;
+	game.debugWindow = &debugWindow;
+
+	debugWindow.setVisible(false);
+
+	window.setFramerateLimit(60);
+	//window.setVerticalSyncEnabled(true);
 
 	// Load from a font file on disk
 	if (!game.MyFont.loadFromFile("uni.ttf"))
@@ -37,7 +50,7 @@ int main()
 
 	sf::Clock clock;
 
-	while (true)
+	while (window.isOpen() == true)
 	{
 		stepTime += clock.getElapsedTime().asSeconds();
 		clock.restart();
@@ -48,13 +61,11 @@ int main()
 
 			stepTime -= game.step;
 			drawn = false;
-
-			Draw(window);
 		}
 
 		if (drawn)
 		{
-			sf::sleep(sf::seconds(0.01f));
+			//sf::sleep(sf::seconds(0.01f));
 		}
 		else
 		{
@@ -64,15 +75,19 @@ int main()
 		}
 
 
-		//sf::Event newEvent;
+		sf::Event newEvent;
 
-		/*while (window.pollEvent(newEvent))
+		while (window.pollEvent(newEvent))
 		{
 			if (newEvent.type == sf::Event::Closed)
 			{
 				window.close();
 			}
-		}*/
+		}
+	}
+
+	if (debugWindow.isOpen()) {
+		window.close();
 	}
 
 	return 0;
@@ -80,14 +95,21 @@ int main()
 
 void Start() {
 	
+	game.enemyManager = &enemyManager;
+
 	//Create Player
-	sf::RectangleShape* rect = new sf::RectangleShape;
-	CPlayer *player =  new CPlayer(rect);
-	game.player = player;
-	rect->setSize(sf::Vector2f(20.0f, 20.0f));
-	rect->setFillColor(sf::Color::Green);
-	rect->setPosition(400, 550);
-	rect->setRotation(45);
+	game.player = new CPlayer(new sf::RectangleShape, new sf::RectangleShape);;
+	game.player->rect->setSize(sf::Vector2f(20.0f, 20.0f));
+	game.player->rect->setFillColor(sf::Color::Green);
+	game.player->rect->setPosition(400, 550);
+	game.player->rect->setRotation(45);
+	game.player->bullet = new sf::RectangleShape;
+	game.player->bullet->setSize(sf::Vector2f(5.0f, 20.0f));
+	game.player->bullet->setFillColor(sf::Color::White);
+	game.player->bullet->setPosition(-100, -100);
+
+	enemyManager.CreateAllEnemies();
+	
 
 #pragma region "Menu Drawables"
 	//Title
@@ -160,7 +182,17 @@ int FixedUpdate() {
 		break;
 
 	case 10:
+		game.player->CheckBulletCollision(&enemyManager);
+		game.player->MoveBullet();
+		enemyManager.MoveEnemies();
+
+
 		game.toDraw.push_back(game.player->rect);
+		game.toDraw.push_back(game.player->bullet);
+
+		for (CEnemy* item : enemyManager.enemies) {
+			game.toDraw.push_back(item->trans);
+		}
 		Input();
 		break;
 
@@ -304,13 +336,7 @@ void Credits() {
 	{
 		if (!game.frozenEnter) {
 			game.frozenEnter = true;
-			switch (game.menuState)
-			{
-
-			default:
-				game.state = 0;
-				break;
-			}
+			game.state = 0;
 		}
 	}
 	else {
@@ -330,6 +356,11 @@ void Input() {
 		// left key is pressed: move our character
 		game.player->MoveLeft();
 	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && game.player->canShoot)
+	{
+		game.player->canShoot = false;
+		game.player->bullet->setPosition(game.player->rect->getPosition().x, game.player->rect->getPosition().y - 20);
+	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 	{
 		CreateText("Hold Escape for  " + std::to_string(game.quitTimer / 1000) + "s  To Quit" , 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
@@ -345,7 +376,7 @@ void Input() {
 		CreateText("Hold Tab for  " + std::to_string(game.debugTimer / 1000) + "s  To Open Debug", 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
 		game.debugTimer -= (game.step) * 1000;
 
-		if (game.debugTimer < 0) game.state = 0;
+		if (game.debugTimer < 0) game.debugWindow->setVisible(true);
 	}
 	else {
 		game.debugTimer = 2500;
@@ -364,9 +395,6 @@ void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _col
 
 void Draw(sf::RenderWindow& window) {
 	window.clear();
-	if (window.isOpen() == true) {
-		std::cout << "here";
-	}
 
 	for (sf::Drawable* item : game.toDraw)
 	{
