@@ -15,7 +15,7 @@ public:
 	std::string name = "";
 	int lives = 3;
 	int score = 0;
-	int bulletSpeed;
+	int bulletSpeed = 7;
 
 	static const int wallHeight = 3;
 	static const int wallWidth = 5;
@@ -29,6 +29,8 @@ public:
 	std::vector<sf::RectangleShape*> walls;
 
 	bool canShoot = true;
+	bool superBullet = false;
+	bool seekingBullet = false;
 
 	CPlayer(sf::RectangleShape *_rect, sf::RectangleShape* _bullet);
 

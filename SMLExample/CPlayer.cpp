@@ -7,6 +7,9 @@ CPlayer::CPlayer(sf::RectangleShape* _rect, sf::RectangleShape* _bullet) :
 
 void CPlayer::CreateWalls()
 {
+	for (sf::RectangleShape* wall : walls) {
+		delete wall;
+	}
 	walls.clear();
 
 	for (int i = 0; i < 4; i++) {
@@ -14,12 +17,12 @@ void CPlayer::CreateWalls()
 			for (int x = 0; x < wallWidth; x++) {
 				if (wallShape[y][x]) {
 
-					for (int r = 0; r < 3; r++) {
-						for (int c = 0; c < 3; c++) {
+					for (int r = 0; r < 5; r++) {
+						for (int c = 0; c < 5; c++) {
 							sf::RectangleShape* tempWall = new sf::RectangleShape;
-							tempWall->setSize(sf::Vector2f(5.0f, 5.0f));
+							tempWall->setSize(sf::Vector2f(3.0f, 3.0f));
 							tempWall->setFillColor(sf::Color::Green);
-							tempWall->setPosition(100 + (i * 175) + (x * 15) + (r * 5), 470 + (y * 15) + (c * 5));
+							tempWall->setPosition(100 + (i * 175) + (x * 15) + (r * 3), 470 + (y * 15) + (c * 3));
 
 							walls.push_back(tempWall);
 							//game->gameDraw.push_back(tempWall);
@@ -56,47 +59,47 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 			bullet->setPosition(-100, -100);
 		}
 
-		for (sf::RectangleShape* wall : walls) {
-			if (wall->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
-				
-				std::vector<sf::RectangleShape*> toDel;
+		if (!superBullet) {
+			for (sf::RectangleShape* wall : walls) {
+				if (wall->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
 
-				for (sf::RectangleShape* _2ndwall : walls) {
+					std::vector<sf::RectangleShape*> toDel;
 
-					float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
+					for (sf::RectangleShape* _2ndwall : walls) {
 
-					float rand = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+						float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
 
-					if (distance < std::rand() % 15 + 3) {
-						toDel.push_back(_2ndwall);
+						float rand = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+
+						if (distance < std::rand() % 15 + 3) {
+							toDel.push_back(_2ndwall);
+						}
 					}
+
+					for (sf::RectangleShape* _wall : toDel) {
+						std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
+						if (pos != walls.end()) walls.erase(pos);
+
+						delete _wall;
+					}
+
+
+
+
+
+
+
+
+
+					canShoot = true;
+					bullet->setPosition(-100, -100);
 				}
-
-				for (sf::RectangleShape* _wall : toDel) {
-					std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
-					if (pos != walls.end()) walls.erase(pos);
-
-					delete _wall;
-				}
-
-				
-
-				
-
-				
-
-				
-
-				canShoot = true;
-				bullet->setPosition(-100, -100);
 			}
 		}
+		
 
 		for (CEnemy* _enemy : _eManager->enemies) {
 			if (_enemy->trans->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
-				std::vector<CEnemy*>::iterator pos = std::find(_eManager->enemies.begin(), _eManager->enemies.end(), _enemy);
-
-				if (pos != _eManager->enemies.end()) _eManager->enemies.erase(pos);
 
 				if (_enemy->type == "top") {
 					AddScore(30);
@@ -111,10 +114,20 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 					AddScore(300);
 				}
 
-				delete _enemy;
+				game->enemyManager->speed = (abs(game->enemyManager->speed) / (game->enemyManager->speed)) * (abs(game->enemyManager->speed) + 0.01f) ;
 
-				canShoot = true;
-				bullet->setPosition(-100, -100);
+
+				std::vector<CEnemy*>::iterator pos = std::find(_eManager->enemies.begin(), _eManager->enemies.end(), _enemy);
+				if (pos != _eManager->enemies.end()) {
+					_eManager->enemies.erase(pos);
+					delete _enemy;
+				}
+
+
+				if (!superBullet) {
+					canShoot = true;
+					bullet->setPosition(-100, -100);
+				}
 			}
 		}
 	}
@@ -122,7 +135,13 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 void CPlayer::MoveBullet()
 {
-	if (!canShoot) bullet->move(0, -5);
+	float speed = (superBullet ? -30 : -bulletSpeed);
+
+	if (seekingBullet) {
+		//game->enemyManager->enemies
+	}
+
+	if (!canShoot) bullet->move(0, speed);
 }
 
 void CPlayer::RemoveLife()

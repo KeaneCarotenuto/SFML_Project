@@ -126,12 +126,17 @@ void SpeedAliens() {
 	game.enemyManager->SpeedEnemies();
 }
 
+void SuperBullets() {
+	game.player->superBullet = !game.player->superBullet;
+	game.player->bullet->setScale(game.player->superBullet ? 8 : 1, game.player->superBullet ? 12 : 1);
+}
+
 void Start() {
 	
 	game.enemyManager = &enemyManager;
 
 	//Create Player
-	game.player = new CPlayer(new sf::RectangleShape, new sf::RectangleShape);;
+	game.player = new CPlayer(new sf::RectangleShape, new sf::RectangleShape);
 	game.player->rect->setSize(sf::Vector2f(20.0f, 20.0f));
 	game.player->rect->setFillColor(sf::Color::Green);
 	game.player->rect->setPosition(400, 550);
@@ -148,7 +153,7 @@ void Start() {
 	CreateButton(&AddScore , "Add Score", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 90, sf::Color::White, 5);
 	CreateButton(&SlowAliens , "Slow Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 120, sf::Color::White, 5);
 	CreateButton(&SpeedAliens , "Speed Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
-	CreateButton(&SpeedAliens , "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
+	CreateButton(&SuperBullets, "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 180, sf::Color::White, 5);
 	
 
 #pragma region "Menu Drawables"

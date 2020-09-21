@@ -3,7 +3,14 @@
 //5, 11, 100, 100, 500, 200
 void CEnemyManager::CreateAllEnemies(int _rows, int _cols, float _startX, float _startY, float _width, float _height)
 {
+	for (CEnemy* e : enemies)
+	{
+		delete e;
+	}
 	enemies.clear();
+	
+	
+	speed = abs(speed);
 
 	for (int row = 0; row < _rows; row++) {
 		for (int col = 0; col < _cols; col++) {
@@ -19,6 +26,11 @@ void CEnemyManager::AddEnemy(int _x, int _y, std::string _type, sf::Color _colou
 
 void CEnemyManager::MoveEnemies()
 {
+	if (enemies.empty()) {
+		CreateAllEnemies();
+		speed -= 0.4;
+	}
+
 	moveDown = false;
 
 	for (CEnemy* item : enemies) {
