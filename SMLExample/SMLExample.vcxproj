@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CButton.cpp" />
     <ClCompile Include="CEnemy.cpp" />
     <ClCompile Include="CEnemyManager.cpp" />
     <ClCompile Include="CGame.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CButton.h" />
     <ClInclude Include="CEnemy.h" />
     <ClInclude Include="CEnemyManager.h" />
     <ClInclude Include="CGame.h" />

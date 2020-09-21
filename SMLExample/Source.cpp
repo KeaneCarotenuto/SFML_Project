@@ -7,6 +7,7 @@
 #include"CPlayer.h"
 #include"CEnemyManager.h"
 #include"CEnemy.h"
+#include"CButton.h"
 
 void Start();
 void Menu();
@@ -15,19 +16,24 @@ void Credits();
 
 int FixedUpdate();
 void Input();
+void CheckButtonsPressed();
 
 void CreateText(std::string _string, int _fontSize, sf::Color _colour, sf::Text::Style _style, float _x , float _y, std::vector<sf::Drawable*>& vector);
+void CreateButton(void(*function)(), std::string _string, int _fontSize, sf::Color _tColour, sf::Text::Style _style, float _x, float _y, sf::Color _bgColour, float _padding);
 
-void Draw(sf::RenderWindow& window);
-
+void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow);
 
 CGame game;
 CEnemyManager enemyManager;
 
+void test() {
+	std::cout << "Worked";
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Space Invaders - By Keane Carotenuto");
-	sf::RenderWindow debugWindow(sf::VideoMode(300, 300), "DEBUG WINDOW");
+	sf::RenderWindow debugWindow(sf::VideoMode(300, 600), "DEBUG WINDOW");
 	debugWindow.setPosition(sf::Vector2i(window.getPosition().x + window.getSize().x, window.getPosition().y));
 
 	game.mainWindow = &window;
@@ -69,10 +75,12 @@ int main()
 		}
 		else
 		{
-			Draw(window);
+			Draw(window, debugWindow);
 
 			drawn = true;
 		}
+
+		CheckButtonsPressed();
 
 
 		sf::Event newEvent;
@@ -84,6 +92,14 @@ int main()
 				window.close();
 			}
 		}
+
+		while (debugWindow.pollEvent(newEvent))
+		{
+			if (newEvent.type == sf::Event::Closed)
+			{
+				debugWindow.setVisible(false);
+			}
+		}
 	}
 
 	if (debugWindow.isOpen()) {
@@ -91,6 +107,23 @@ int main()
 	}
 
 	return 0;
+}
+
+
+void AddLife() {
+	game.player->AddLife();
+}
+
+void AddScore() {
+	game.player->AddScore(100);
+}
+
+void SlowAliens() {
+	game.enemyManager->SlowEnemies();
+}
+
+void SpeedAliens() {
+	game.enemyManager->SpeedEnemies();
 }
 
 void Start() {
@@ -102,13 +135,20 @@ void Start() {
 	game.player->rect->setSize(sf::Vector2f(20.0f, 20.0f));
 	game.player->rect->setFillColor(sf::Color::Green);
 	game.player->rect->setPosition(400, 550);
-	game.player->rect->setRotation(45);
 	game.player->bullet = new sf::RectangleShape;
 	game.player->bullet->setSize(sf::Vector2f(5.0f, 20.0f));
 	game.player->bullet->setFillColor(sf::Color::White);
 	game.player->bullet->setPosition(-100, -100);
+	game.player->game = &game;
 
 	enemyManager.CreateAllEnemies();
+
+	CreateButton(nullptr, "Debug Buttons", 25, sf::Color::White, sf::Text::Style::Regular, 20, 10, sf::Color::Black, 0);
+	CreateButton(&AddLife , "Add Life", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 60, sf::Color::White, 5);
+	CreateButton(&AddScore , "Add Score", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 90, sf::Color::White, 5);
+	CreateButton(&SlowAliens , "Slow Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 120, sf::Color::White, 5);
+	CreateButton(&SpeedAliens , "Speed Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
+	CreateButton(&SpeedAliens , "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
 	
 
 #pragma region "Menu Drawables"
@@ -162,6 +202,11 @@ void Start() {
 	//Return
 	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.CreditsDraw);
 #pragma endregion
+
+	CreateText("Lives: " + std::to_string(game.player->lives), 20, sf::Color::Green, sf::Text::Style::Bold, 300, 10, game.gameDraw);
+	CreateText("Score: " + std::to_string(game.player->score), 20, sf::Color::Green, sf::Text::Style::Bold, 30, 10, game.gameDraw);
+
+	game.player->CreateWalls();
 }
 
 int FixedUpdate() {
@@ -186,9 +231,16 @@ int FixedUpdate() {
 		game.player->MoveBullet();
 		enemyManager.MoveEnemies();
 
-
 		game.toDraw.push_back(game.player->rect);
 		game.toDraw.push_back(game.player->bullet);
+
+		for (sf::RectangleShape* item : game.player->walls) {
+			game.toDraw.push_back(item);
+		}
+
+		for (sf::Drawable* item : game.gameDraw) {
+			game.toDraw.push_back(item);
+		}
 
 		for (CEnemy* item : enemyManager.enemies) {
 			game.toDraw.push_back(item->trans);
@@ -210,6 +262,8 @@ void Menu() {
 	{
 		game.toDraw.push_back(item);
 	}
+
+	CheckButtonsPressed();
 
 	//Moving Selection with Keys (frozen menu is used to move only one option at a time)
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -243,6 +297,14 @@ void Menu() {
 			{
 			case game.M_PlayText:
 				game.state = 10;
+				game.player->score = -1; game.player->AddScore(1);
+				game.player->lives = 2; game.player->AddLife();
+				game.player->canShoot = true;
+				game.player->bullet->setPosition(-100, -100);
+				game.player->CreateWalls();
+				game.enemyManager->CreateAllEnemies();
+				game.enemyManager->speed = 1;
+				game.enemyManager->moveDown = false;
 				break;
 
 			case game.M_Options:
@@ -359,7 +421,7 @@ void Input() {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && game.player->canShoot)
 	{
 		game.player->canShoot = false;
-		game.player->bullet->setPosition(game.player->rect->getPosition().x, game.player->rect->getPosition().y - 20);
+		game.player->bullet->setPosition(game.player->rect->getPosition().x + 7.5f, game.player->rect->getPosition().y - 20);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 	{
@@ -383,6 +445,31 @@ void Input() {
 	}
 }
 
+void CheckButtonsPressed() {
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+		if (!game.frozenClick) {
+			float mX = sf::Mouse::getPosition(*game.debugWindow).x;
+			float mY = sf::Mouse::getPosition(*game.debugWindow).y;
+			std::cout << "Click";
+			for (CButton* _button : game.Buttons)
+			{
+				float bX = _button->rect->getPosition().x;
+				float bY = _button->rect->getPosition().y;
+				float bW = _button->rect->getSize().x;
+				float bH = _button->rect->getSize().y;
+
+				if (mX >= bX && mY >= bY && mX <= (bX + bW) && mY < (bY + bH)) {
+					if (_button->function != nullptr) _button->function();
+				}
+			}
+		}
+		game.frozenClick = true;
+	}
+	else {
+		game.frozenClick = false;
+	}
+}
+
 void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _colour = sf::Color::White, sf::Text::Style _style = sf::Text::Style::Regular, float _x = 100, float _y = 100, std::vector<sf::Drawable*>& vector = game.toDraw ) {
 	sf::Text* tempText = new sf::Text;
 	tempText->setString(_string);
@@ -393,8 +480,27 @@ void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _col
 	vector.push_back(tempText);
 }
 
-void Draw(sf::RenderWindow& window) {
-	window.clear();
+//std::string _string, int _fontSize, sf::Color _tColour, sf::Text::Style _style, float _x , float _y, sf::Color _bgColour, float _padding
+void CreateButton(void(*function)(), std::string _string = "Temp", int _fontSize = 20, sf::Color _tColour = sf::Color::White, sf::Text::Style _style = sf::Text::Style::Regular, float _x = 100, float _y = 100, sf::Color _bgColour = sf::Color::Black, float _padding = 10) {
+	sf::Text* tempText = new sf::Text;
+	tempText->setString(_string);
+	tempText->setCharacterSize(_fontSize);
+	tempText->setFillColor(_tColour);
+	tempText->setStyle(_style);
+	tempText->setPosition(_x, _y);
+	tempText->setFont(game.MyFont);
+	
+	sf::RectangleShape* buttonRect = new sf::RectangleShape;
+	buttonRect->setPosition(tempText->getGlobalBounds().left - _padding, tempText->getGlobalBounds().top - _padding);
+	buttonRect->setSize(sf::Vector2f(tempText->getGlobalBounds().width + (2*_padding), tempText->getGlobalBounds().height + (2* _padding)));
+	buttonRect->setFillColor(_bgColour);
+
+	CButton* button = new CButton(buttonRect, tempText, function);
+	game.Buttons.push_back(button);
+}
+
+void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow) {
+	mainWindow.clear();
 
 	for (sf::Drawable* item : game.toDraw)
 	{
@@ -402,8 +508,29 @@ void Draw(sf::RenderWindow& window) {
 			dynamic_cast<sf::Text&> (*item).setFont(game.MyFont);
 		}
 
-		window.draw((*item));
+		mainWindow.draw((*item));
 	}
 
-	window.display();
+	mainWindow.display();
+
+
+	if (debugWindow.isOpen()) {
+		debugWindow.clear();
+
+		for (CButton* item : game.Buttons)
+		{
+
+			debugWindow.draw((*item->rect));
+
+			sf::Text* _text = item->text;
+
+			if (typeid(*_text) == typeid(sf::Text)) {
+				dynamic_cast<sf::Text&> (*_text).setFont(game.MyFont);
+
+				debugWindow.draw((*_text));
+			}
+		}
+
+		debugWindow.display();
+	}
 }

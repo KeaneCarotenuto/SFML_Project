@@ -3,9 +3,11 @@
 //5, 11, 100, 100, 500, 200
 void CEnemyManager::CreateAllEnemies(int _rows, int _cols, float _startX, float _startY, float _width, float _height)
 {
+	enemies.clear();
+
 	for (int row = 0; row < _rows; row++) {
 		for (int col = 0; col < _cols; col++) {
-			AddEnemy(_startX + (col * (_width/_cols)), _startY + (row * (_height/_rows)), "basic", sf::Color::Red);
+			AddEnemy(_startX + (col * (_width/_cols)), _startY + (row * (_height/_rows)), (row == 0 ? "top" : (row <= 2 ? "middle" : "bottom")), sf::Color::Red);
 		}
 	}
 }
@@ -29,4 +31,14 @@ void CEnemyManager::MoveEnemies()
 	for (CEnemy* item : enemies) {
 		item->trans->move(speed, (moveDown ? 20.0f : 0.0f));
 	}
+}
+
+void CEnemyManager::SlowEnemies(float _amount)
+{
+	speed *= _amount;
+}
+
+void CEnemyManager::SpeedEnemies(float _amount)
+{
+	speed /= _amount;
 }

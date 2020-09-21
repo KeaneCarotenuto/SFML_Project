@@ -2,9 +2,11 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 
-#include"CPlayer.h"
 #include"CEnemyManager.h"
 #include"CEnemy.h"
+#include"CButton.h"
+
+class CPlayer;
 
 class CGame
 {
@@ -41,8 +43,17 @@ public:
 
 	};
 
-	sf::Window* mainWindow;
-	sf::Window* debugWindow;
+	std::vector<sf::Drawable*> gameDraw;
+	enum GameDrawables {
+		G_Lives,
+		G_Score
+
+	};
+
+	std::vector<CButton*> Buttons;
+
+	sf::Window* mainWindow = NULL;
+	sf::Window* debugWindow = NULL;
 
 	CPlayer *player = nullptr;
 	CEnemyManager *enemyManager = nullptr;
@@ -55,6 +66,7 @@ public:
 	int menuState = 2;
 	bool frozenMenu = false;
 	bool frozenEnter = false;
+	bool frozenClick = false;
 
 	int quitTimer = 3500;
 	int debugTimer = 2500;
