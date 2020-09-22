@@ -59,17 +59,42 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 			bullet->setPosition(-100, -100);
 		}
 
-		if (!superBullet) {
-			for (sf::RectangleShape* wall : walls) {
-				if (wall->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
+		
+		for (sf::RectangleShape* wall : walls) {
+			if (wall->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
+
+				std::vector<sf::RectangleShape*> toDel;
+
+				for (sf::RectangleShape* _2ndwall : walls) {
+
+					float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
+
+					float rand = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+
+					if (distance < std::rand() % 15 + 3) {
+						toDel.push_back(_2ndwall);
+					}
+				}
+
+				for (sf::RectangleShape* _wall : toDel) {
+					std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
+					if (pos != walls.end()) walls.erase(pos);
+
+					delete _wall;
+				}
+
+				canShoot = true;
+				bullet->setPosition(-100, -100);
+			}
+
+			for (sf::RectangleShape* _bullet : game->enemyManager->bullets) {
+				if (wall->getGlobalBounds().intersects(_bullet->getGlobalBounds())) {
 
 					std::vector<sf::RectangleShape*> toDel;
 
 					for (sf::RectangleShape* _2ndwall : walls) {
 
 						float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
-
-						float rand = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
 
 						if (distance < std::rand() % 15 + 3) {
 							toDel.push_back(_2ndwall);
@@ -78,28 +103,30 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 					for (sf::RectangleShape* _wall : toDel) {
 						std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
-						if (pos != walls.end()) walls.erase(pos);
-
-						delete _wall;
+						if (pos != walls.end()) {
+							walls.erase(pos);
+							delete _wall;
+						}
 					}
 
-
-
-
-
-
-
-
-
-					canShoot = true;
-					bullet->setPosition(-100, -100);
+					_bullet->setPosition(-100, -200);
+					break;
 				}
 			}
+			
 		}
 		
 
+		std::vector<CEnemy*> toDel;
+
 		for (CEnemy* _enemy : _eManager->enemies) {
-			if (_enemy->trans->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
+			if (_enemy == nullptr) {
+				continue;
+			}
+			sf::FloatRect erect = _enemy->trans->getGlobalBounds();
+			sf::FloatRect brect = bullet->getGlobalBounds();
+
+			if (erect.intersects(brect)) {
 
 				if (_enemy->type == "top") {
 					AddScore(30);
@@ -116,18 +143,20 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 				game->enemyManager->speed = (abs(game->enemyManager->speed) / (game->enemyManager->speed)) * (abs(game->enemyManager->speed) + 0.01f) ;
 
-
-				std::vector<CEnemy*>::iterator pos = std::find(_eManager->enemies.begin(), _eManager->enemies.end(), _enemy);
-				if (pos != _eManager->enemies.end()) {
-					_eManager->enemies.erase(pos);
-					delete _enemy;
-				}
-
+				toDel.push_back(_enemy);
 
 				if (!superBullet) {
 					canShoot = true;
 					bullet->setPosition(-100, -100);
 				}
+			}
+		}
+
+		for (CEnemy* _enemy : toDel) {
+			std::vector<CEnemy*>::iterator pos = std::find(_eManager->enemies.begin(), _eManager->enemies.end(), _enemy);
+			if (true) {
+				_eManager->enemies.erase(pos);
+				delete _enemy;
 			}
 		}
 	}

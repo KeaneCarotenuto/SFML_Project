@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <time.h>
 #include <SFML/Graphics.hpp>
 
 #include"CGame.h"
@@ -131,8 +132,14 @@ void SuperBullets() {
 	game.player->bullet->setScale(game.player->superBullet ? 8 : 1, game.player->superBullet ? 12 : 1);
 }
 
+void SpawnMysteryShip() {
+	std::cout << std::rand() % 2;
+	game.enemyManager->SpawnMystery(std::rand() % 2);
+}
+
 void Start() {
-	
+	srand(time(NULL));
+
 	game.enemyManager = &enemyManager;
 
 	//Create Player
@@ -146,7 +153,17 @@ void Start() {
 	game.player->bullet->setPosition(-100, -100);
 	game.player->game = &game;
 
+	
 	enemyManager.CreateAllEnemies();
+
+	for (int i = 0; i < 3; i++) {
+		sf::RectangleShape* tempBullet = new sf::RectangleShape;
+		tempBullet->setSize(sf::Vector2f(5.0f, 20.0f));
+		tempBullet->setFillColor(sf::Color::White);
+		tempBullet->setPosition(-100, -200);
+		enemyManager.bullets.push_back(tempBullet);
+	}
+	
 
 	CreateButton(nullptr, "Debug Buttons", 25, sf::Color::White, sf::Text::Style::Regular, 20, 10, sf::Color::Black, 0);
 	CreateButton(&AddLife , "Add Life", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 60, sf::Color::White, 5);
@@ -154,6 +171,7 @@ void Start() {
 	CreateButton(&SlowAliens , "Slow Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 120, sf::Color::White, 5);
 	CreateButton(&SpeedAliens , "Speed Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
 	CreateButton(&SuperBullets, "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 180, sf::Color::White, 5);
+	CreateButton(&SpawnMysteryShip, "Spawn Mystery", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 210, sf::Color::White, 5);
 	
 
 #pragma region "Menu Drawables"
@@ -235,6 +253,7 @@ int FixedUpdate() {
 		game.player->CheckBulletCollision(&enemyManager);
 		game.player->MoveBullet();
 		enemyManager.MoveEnemies();
+		enemyManager.MoveBullet();
 
 		game.toDraw.push_back(game.player->rect);
 		game.toDraw.push_back(game.player->bullet);
@@ -249,6 +268,10 @@ int FixedUpdate() {
 
 		for (CEnemy* item : enemyManager.enemies) {
 			game.toDraw.push_back(item->trans);
+		}
+
+		for (sf::RectangleShape* item : enemyManager.bullets) {
+			game.toDraw.push_back(item);
 		}
 		Input();
 		break;
@@ -455,7 +478,6 @@ void CheckButtonsPressed() {
 		if (!game.frozenClick) {
 			float mX = sf::Mouse::getPosition(*game.debugWindow).x;
 			float mY = sf::Mouse::getPosition(*game.debugWindow).y;
-			std::cout << "Click";
 			for (CButton* _button : game.Buttons)
 			{
 				float bX = _button->rect->getPosition().x;

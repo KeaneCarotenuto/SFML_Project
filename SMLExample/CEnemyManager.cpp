@@ -24,6 +24,14 @@ void CEnemyManager::AddEnemy(int _x, int _y, std::string _type, sf::Color _colou
 	enemies.push_back( new CEnemy(_x, _y, _type, _colour));
 }
 
+void CEnemyManager::SpawnMystery(bool left)
+{
+	CEnemy* e = new CEnemy((left ? -10 : 810), 40, "mystery", sf::Color::Red);
+	enemies.push_back(e);
+	e->left = left;
+	
+}
+
 void CEnemyManager::MoveEnemies()
 {
 	if (enemies.empty()) {
@@ -34,6 +42,7 @@ void CEnemyManager::MoveEnemies()
 	moveDown = false;
 
 	for (CEnemy* item : enemies) {
+		if (item->type == "mystery") continue;
 		if ((item->trans->getPosition().x < 20 && speed < 0) || (item->trans->getPosition().x > (780 - 20) && speed > 0)) {
 			speed *= -1;
 			moveDown = true;
@@ -41,7 +50,21 @@ void CEnemyManager::MoveEnemies()
 	}
 
 	for (CEnemy* item : enemies) {
-		item->trans->move(speed, (moveDown ? 20.0f : 0.0f));
+		if (item->type == "mystery") {
+			item->trans->move((item->left ? 4 : -4), 0);
+
+			if (item->trans->getPosition().x > 850 || item->trans->getPosition().x < -70) {
+				std::vector<CEnemy*>::iterator pos = std::find(enemies.begin(), enemies.end(), item);
+				if (pos != enemies.end() ) {
+					enemies.erase(pos);
+					delete item;
+				}
+			}
+		}
+		else {
+			item->trans->move(speed, (moveDown ? 20.0f : 0.0f));
+		}
+		
 	}
 }
 
@@ -53,4 +76,26 @@ void CEnemyManager::SlowEnemies(float _amount)
 void CEnemyManager::SpeedEnemies(float _amount)
 {
 	speed /= _amount;
+}
+
+void CEnemyManager::MoveBullet()
+{
+	for (sf::RectangleShape* _bullet : bullets) {
+		if (_bullet->getPosition().x == -100 && _bullet->getPosition().y == -200) {
+			
+			int rand = std::rand() % enemies.size();
+			float x = enemies[rand]->trans->getPosition().x + 7.5f;
+			float y = enemies[rand]->trans->getPosition().y + 20;
+
+			_bullet->setPosition(x,y);
+			break;
+		}
+		else {
+			_bullet->move(0, 5);
+		}
+
+		if (_bullet->getPosition().y > 600) {
+			_bullet->setPosition(-100, -200);
+		}
+	}
 }

@@ -8,6 +8,8 @@ public:
 	std::string type;
 	sf::RectangleShape* trans;
 
+	bool left;
+
 	CEnemy(float _x, float _y,std::string _str, sf::Color _col);
 };
 
