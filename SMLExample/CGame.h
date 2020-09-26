@@ -43,6 +43,36 @@ public:
 
 	};
 
+	std::vector<sf::Drawable*> EndScreenDraw;
+	enum EndScreenOptions {
+		E_Title,
+		E_Subtitle,
+		E_HighScore,
+		E_Score,
+		E_Return
+
+	};
+
+	std::vector<sf::Drawable*> HighscoreDraw;
+	enum HighscoreOptions {
+		H_Title,
+		H_Score,
+		H_Subtitle,
+		H_HighScores
+	};
+
+	std::vector<CButton*> Buttons;
+	enum ButtonsOptions {
+		B_Title,
+		B_AddLife,
+		B_AddScore,
+		b_SpeedAliens,
+		B_SlowAliens,
+		B_SuperBullets,
+		B_SpawnMysteryShip,
+		B_RepairWalls
+	};
+
 	std::vector<sf::Drawable*> gameDraw;
 	enum GameDrawables {
 		G_Lives,
@@ -50,10 +80,11 @@ public:
 
 	};
 
-	std::vector<CButton*> Buttons;
+	
 
 	sf::Window* mainWindow = NULL;
 	sf::Window* debugWindow = NULL;
+	sf::Window* highscoreWindow = NULL;
 
 	CPlayer *player = nullptr;
 	CEnemyManager *enemyManager = nullptr;

@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
+#include <fstream>
 #include <SFML/Graphics.hpp>
-
-#include"CEnemyManager.h";
-#include"CGame.h";
+#include "CEnemyManager.h"
+#include "CGame.h"
 
 class CPlayer
 {
@@ -11,11 +11,14 @@ public:
 	CGame* game;
 	sf::RectangleShape *rect;
 	sf::RectangleShape *bullet;
+	sf::Sprite *sprite = new sf::Sprite();
 
 	std::string name = "";
 	int lives = 3;
 	int score = 0;
+	int highestScore = 0;
 	int bulletSpeed = 7;
+	int bulletsShot = 0;
 
 	static const int wallHeight = 3;
 	static const int wallWidth = 5;

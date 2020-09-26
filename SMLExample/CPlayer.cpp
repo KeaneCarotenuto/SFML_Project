@@ -1,7 +1,7 @@
 #include "CPlayer.h"
 
 CPlayer::CPlayer(sf::RectangleShape* _rect, sf::RectangleShape* _bullet) :
-	rect(_rect), bullet(_bullet)
+	rect(_rect), bullet(_bullet), game(nullptr)
 {
 }
 
@@ -22,7 +22,7 @@ void CPlayer::CreateWalls()
 							sf::RectangleShape* tempWall = new sf::RectangleShape;
 							tempWall->setSize(sf::Vector2f(3.0f, 3.0f));
 							tempWall->setFillColor(sf::Color::Green);
-							tempWall->setPosition(100 + (i * 175) + (x * 15) + (r * 3), 470 + (y * 15) + (c * 3));
+							tempWall->setPosition((float)(100 + (i * 175) + (x * 15) + (r * 3)), (float)( 470 + (y * 15) + (c * 3)));
 
 							walls.push_back(tempWall);
 							//game->gameDraw.push_back(tempWall);
@@ -47,7 +47,7 @@ void CPlayer::MoveLeft()
 
 float Distance(int x1, int y1, int x2, int y2)
 {
-	return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
+	return sqrt((float)(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0));
 }
 
 void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
@@ -67,7 +67,7 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 				for (sf::RectangleShape* _2ndwall : walls) {
 
-					float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
+					float distance = Distance((int)wall->getPosition().x, (int)wall->getPosition().y, (int)_2ndwall->getPosition().x, (int)_2ndwall->getPosition().y);
 
 					float rand = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
 
@@ -94,7 +94,7 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 					for (sf::RectangleShape* _2ndwall : walls) {
 
-						float distance = Distance(wall->getPosition().x, wall->getPosition().y, _2ndwall->getPosition().x, _2ndwall->getPosition().y);
+						float distance = Distance((int)wall->getPosition().x, (int)wall->getPosition().y, (int)_2ndwall->getPosition().x, (int)_2ndwall->getPosition().y);
 
 						if (distance < std::rand() % 15 + 3) {
 							toDel.push_back(_2ndwall);
@@ -113,7 +113,6 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 					break;
 				}
 			}
-			
 		}
 		
 
@@ -160,23 +159,79 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 			}
 		}
 	}
+
+	for (sf::RectangleShape* _bullet : game->enemyManager->bullets) {
+		if (_bullet != nullptr) {
+			if (rect->getGlobalBounds().intersects(_bullet->getGlobalBounds())) {
+				RemoveLife();
+				_bullet->setPosition(-100,-200);
+				rect->setPosition(390,rect->getPosition().y);
+				break;
+				
+			}
+		}
+	}
 }
 
 void CPlayer::MoveBullet()
 {
-	float speed = (superBullet ? -30 : -bulletSpeed);
+	float speed = (superBullet ? -30 : (float)-bulletSpeed);
 
 	if (seekingBullet) {
 		//game->enemyManager->enemies
 	}
 
-	if (!canShoot) bullet->move(0, speed);
+	if (!canShoot) {
+		bullet->move(0, speed);
+	}
 }
 
 void CPlayer::RemoveLife()
 {
 	game->player->lives -= 1;
 	dynamic_cast<sf::Text&> (*game->gameDraw[game->G_Lives]).setString("Lives: " + std::to_string(game->player->lives));
+
+	if (lives == 0) {
+		game->state = 4;
+
+		std::string line;
+		std::vector<std::string> lines;
+		std::ifstream myfile("HIGHSCORES.txt");
+		if (myfile.is_open())
+		{
+			while (std::getline(myfile, line))
+			{
+				lines.push_back(line);
+			}
+			myfile.close();
+		}
+		else std::cout << "Unable to open file 1\n";
+
+		bool wasInserted = false;
+		std::vector<std::string>::iterator it;
+		for (it = lines.begin(); it < lines.end(); it++) {
+			if (score >= std::stoi(*it)) {
+				lines.insert(it, std::to_string((score)));
+				wasInserted = true;
+				break;
+			}
+		}
+		if (!wasInserted) {
+			lines.push_back(std::to_string((score)));
+		}
+
+
+		std::ofstream highscores;
+		highscores.open("HIGHSCORES.txt");
+		if (highscores.is_open())
+		{
+			for (it = lines.begin(); it < lines.end(); it++) {
+				highscores << *it << "\n";
+			}
+		}
+		else std::cout << "Unable to open file 2\n";
+		highscores.close();
+	}
 }
 
 void CPlayer::AddLife()
