@@ -29,7 +29,6 @@ void CEnemyManager::SpawnMystery(bool left)
 	CEnemy* e = new CEnemy((float)(left ? -10 : 810), 40, "mystery", sf::Color::Red);
 	enemies.push_back(e);
 	e->left = left;
-	
 }
 
 void CEnemyManager::MoveEnemies()

@@ -25,5 +25,4 @@ public:
 	void SlowEnemies(float _amount = 0.5f);
 	void SpeedEnemies(float _amount = 0.5f);
 	void MoveBullet();
-
 };

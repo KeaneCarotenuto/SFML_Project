@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include"CEnemyManager.h"
 #include"CEnemy.h"
@@ -90,6 +91,26 @@ public:
 	CEnemyManager *enemyManager = nullptr;
 
 	sf::Font MyFont;
+
+	sf::Texture topTex;
+	sf::Texture middleTex;
+	sf::Texture bottomTex;
+	sf::Texture mysteryTex;
+
+	
+	sf::SoundBuffer shootBuffer;
+	sf::Sound shootSound;
+
+	sf::SoundBuffer killBuffer;
+	sf::Sound killSound;
+
+	sf::SoundBuffer explodeBuffer;
+	sf::Sound explodeSound;
+
+	std::vector<sf::SoundBuffer*> musicBuffer;
+	sf::Sound musicSound;
+	int currentMusic = 0;
+	sf::Clock musicClock;
 
 	float step = (1.0f / 60.0f); // Modify this to change physics rate.
 

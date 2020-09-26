@@ -16,19 +16,16 @@ void CPlayer::CreateWalls()
 		for (int y = 0; y < wallHeight; y++) {
 			for (int x = 0; x < wallWidth; x++) {
 				if (wallShape[y][x]) {
-
 					for (int r = 0; r < 5; r++) {
 						for (int c = 0; c < 5; c++) {
 							sf::RectangleShape* tempWall = new sf::RectangleShape;
 							tempWall->setSize(sf::Vector2f(3.0f, 3.0f));
 							tempWall->setFillColor(sf::Color::Green);
 							tempWall->setPosition((float)(100 + (i * 175) + (x * 15) + (r * 3)), (float)( 470 + (y * 15) + (c * 3)));
-
 							walls.push_back(tempWall);
 							//game->gameDraw.push_back(tempWall);
 						}
 					}
-
 				}
 			}
 		}
@@ -50,7 +47,7 @@ float Distance(int x1, int y1, int x2, int y2)
 	return sqrt((float)(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0));
 }
 
-void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
+void CPlayer::CheckCollision(CEnemyManager* _eManager)
 {
 	if (bullet != nullptr) {
 
@@ -85,6 +82,7 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 
 				canShoot = true;
 				bullet->setPosition(-100, -100);
+				break;
 			}
 
 			for (sf::RectangleShape* _bullet : game->enemyManager->bullets) {
@@ -126,6 +124,8 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 			sf::FloatRect brect = bullet->getGlobalBounds();
 
 			if (erect.intersects(brect)) {
+
+				KillSound();
 
 				if (_enemy->type == "top") {
 					AddScore(30);
@@ -171,6 +171,25 @@ void CPlayer::CheckBulletCollision(CEnemyManager* _eManager)
 			}
 		}
 	}
+
+
+	/*std::vector<sf::RectangleShape*> toDel;
+
+	for (CEnemy* _enemy : game->enemyManager->enemies) {
+		for (sf::RectangleShape* wall : walls) {
+			if (wall->getGlobalBounds().intersects(_enemy->trans->getGlobalBounds())) {
+				toDel.push_back(wall);
+			}
+		}
+	}
+
+	for (sf::RectangleShape* _wall : toDel) {
+		std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
+		if (pos != walls.end()) {
+			walls.erase(pos);
+			delete _wall;
+		}
+	}*/
 }
 
 void CPlayer::MoveBullet()
@@ -190,6 +209,9 @@ void CPlayer::RemoveLife()
 {
 	game->player->lives -= 1;
 	dynamic_cast<sf::Text&> (*game->gameDraw[game->G_Lives]).setString("Lives: " + std::to_string(game->player->lives));
+
+	game->explodeSound.setBuffer(game->explodeBuffer);
+	game->explodeSound.play();
 
 	if (lives == 0) {
 		game->state = 4;
@@ -244,4 +266,15 @@ void CPlayer::AddScore(int _score)
 {
 	game->player->score += _score;
 	dynamic_cast<sf::Text&> (*game->gameDraw[game->G_Score]).setString("Score: " + std::to_string(game->player->score));
+}
+
+void CPlayer::ShootSound() {
+	game->shootSound.setBuffer(game->shootBuffer);
+	game->shootSound.play();
+}
+
+void CPlayer::KillSound()
+{
+	game->killSound.setBuffer(game->killBuffer);
+	game->killSound.play();
 }

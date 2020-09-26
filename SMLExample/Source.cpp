@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <math.h>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include"CGame.h"
 #include"CPlayer.h"
@@ -33,12 +35,9 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 CGame game;
 CEnemyManager enemyManager;
 
-void test() {
-	std::cout << "Worked";
-}
-
 int main()
 {
+	
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Space Invaders - By Keane Carotenuto");
 
 	sf::RenderWindow debugWindow(sf::VideoMode(300, 600), "DEBUG WINDOW");
@@ -56,11 +55,6 @@ int main()
 
 	window.setFramerateLimit(60);
 	//window.setVerticalSyncEnabled(true);
-
-	// Load from a font file on disk
-	if (!game.MyFont.loadFromFile("uni.ttf"))
-	{
-	}
 
 	Start();
 
@@ -151,6 +145,48 @@ void RepairWalls() {
 
 
 void Start() {
+	// Load from a font file on disk
+	if (!game.MyFont.loadFromFile("uni.ttf")) std::cout << "Failed To Load Font \n";
+	if (!game.shootBuffer.loadFromFile("shoot.wav")) std::cout << "Failed To Load Sound \n";
+	if (!game.killBuffer.loadFromFile("invaderkilled.wav")) std::cout << "Failed To Load Sound \n";
+	if (!game.explodeBuffer.loadFromFile("explosion.wav")) std::cout << "Failed To Load Sound \n";
+
+	for (int i = 1; i <= 4; i++) {
+		sf::SoundBuffer* temp =  new sf::SoundBuffer;
+		game.musicBuffer.push_back(temp);
+	}
+
+	for (int i = 1; i <= 4; i++) {
+		if (!game.musicBuffer[i-1]->loadFromFile("fastinvader" + std::to_string(i) + ".wav")) std::cout << "Failed To Load Sound \n";
+	}
+	game.musicSound.setBuffer(*game.musicBuffer[0]);
+
+	game.musicSound.setVolume((float)game.volume / 4);
+	game.shootSound.setVolume((float)game.volume / 4);
+	game.killSound.setVolume((float)game.volume / 4);
+	game.explodeSound.setVolume((float)game.volume / 4);
+
+	if (!game.topTex.loadFromFile("top.png", sf::IntRect(0, 0, 20, 20)))
+	{
+		std::cout << "FAIL";
+	}
+	
+	if (!game.middleTex.loadFromFile("middle.png", sf::IntRect(0, 0, 20, 20)))
+	{
+		std::cout << "FAIL";
+	}
+	
+	if (!game.bottomTex.loadFromFile("bottom.png", sf::IntRect(0, 0, 20, 20)))
+	{
+		std::cout << "FAIL";
+	}
+	
+	if (!game.mysteryTex.loadFromFile("mystery.png", sf::IntRect(0, 0, 46, 20)))
+	{
+		std::cout << "FAIL";
+	}
+	
+
 	srand((unsigned)time(NULL));
 
 	game.enemyManager = &enemyManager;
@@ -266,6 +302,7 @@ void Start() {
 
 	CreateText("Lives: " + std::to_string(game.player->lives), 20, sf::Color::Green, sf::Text::Style::Bold, 300, 10, game.gameDraw);
 	CreateText("Score: " + std::to_string(game.player->score), 20, sf::Color::Green, sf::Text::Style::Bold, 30, 10, game.gameDraw);
+	CreateText("Debug: TAB\nExit: ESC", 15, sf::Color::Color(125,125,125,255), sf::Text::Style::Regular, 680, 550, game.gameDraw);
 
 	game.player->CreateWalls();
 }
@@ -353,6 +390,7 @@ void Menu() {
 				game.enemyManager->speed = 1;
 				game.enemyManager->moveDown = false;
 				game.enemyManager->atBot = false;
+				game.musicSound.play();
 				break;
 
 			case game.M_Options:
@@ -416,6 +454,11 @@ void Options() {
 			case game.O_Volume:
 				(game.volume < 100) ? game.volume += 10 : game.volume = 0;
 				dynamic_cast<sf::Text&> (*game.OptionsDraw[game.O_Volume]).setString("Volume: " + std::to_string(game.volume));
+				game.shootSound.setVolume((float)game.volume / 4);
+				game.killSound.setVolume((float)game.volume / 4);
+				game.musicSound.setVolume((float)game.volume / 4);
+				game.explodeSound.setVolume((float)game.volume / 4);
+
 				break;
 
 			default:
@@ -454,8 +497,24 @@ void Credits() {
 	}
 }
 
+float Clamp(float a, float b, float c) {
+	if (a < b) return b;
+	else if (a > c) return c;
+	else return a;
+}
+
 void Game() {
-	game.player->CheckBulletCollision(&enemyManager);
+	if (game.musicSound.getPlayingOffset().asMilliseconds() <= 0 && game.musicClock.getElapsedTime().asSeconds() > (1.2f -   Clamp(std::abs(game.enemyManager->speed) / 5, 0, 1))) {
+		game.musicClock.restart();
+		game.currentMusic++;
+		if (game.currentMusic >= 4) {
+			game.currentMusic = 0;
+		}
+		game.musicSound.setBuffer(*game.musicBuffer[game.currentMusic]);
+		game.musicSound.play();
+	}
+
+	game.player->CheckCollision(&enemyManager);
 	game.player->MoveBullet();
 	enemyManager.MoveEnemies();
 	enemyManager.MoveBullet();
@@ -467,8 +526,6 @@ void Game() {
 		}
 	}
 
-	game.toDraw.push_back(game.player->bullet);
-
 	for (sf::RectangleShape* item : game.player->walls) {
 		game.toDraw.push_back(item);
 	}
@@ -477,9 +534,6 @@ void Game() {
 		game.toDraw.push_back(item);
 	}
 
-	for (sf::RectangleShape* item : enemyManager.bullets) {
-		game.toDraw.push_back(item);
-	}
 	Input();
 }
 
@@ -514,6 +568,8 @@ void EndScreen() {
 }
 
 
+
+
 void Input() {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
@@ -527,6 +583,7 @@ void Input() {
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && game.player->canShoot)
 	{
+		game.player->ShootSound();
 		game.player->canShoot = false;
 		game.player->bullet->setPosition(game.player->rect->getPosition().x + game.player->rect->getLocalBounds().width/2 - 2.5f, game.player->rect->getPosition().y - 20);
 		game.player->bulletsShot++;
@@ -626,49 +683,59 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 
 
 	//I know that this is a stupid way to do it... I added sprites at the end, and you need to load the texture before you use draw it in the given scope.. So I had to do this...
+	//I think I could have created a 'new sf::Sprite' and assigned that? but its too late now...
+	//I could also turn these into functions... but... oh well.
 	if (game.state == 10) {
 
-		sf::Texture ptexture;
-
-		if (!ptexture.loadFromFile("player.png", sf::IntRect(0, 0, 33, 20)))
+		//Player Sp[rite
+		sf::Texture texture;
+		if (!texture.loadFromFile("player.png", sf::IntRect(0, 0, 33, 20)))
 		{
 			std::cout << "FAIL";
 		}
-
-		game.player->sprite->setTexture(ptexture);
+		game.player->sprite->setTexture(texture);
 		game.player->sprite->setPosition(game.player->rect->getPosition());
 		mainWindow.draw(*(game.player->sprite));
 
+		//Bullet Sprites
+		sf::Sprite bullet;
+		if (!texture.loadFromFile("bullet.png", sf::IntRect(0, 0, 33, 20)))
+		{
+			std::cout << "FAIL";
+		}
+		bullet.setTexture(texture);
+		bullet.setPosition(game.player->bullet->getPosition().x + ((std::time(NULL) % 2 == 1 ? (game.player->superBullet ? 40 : 5) : 0)), game.player->bullet->getPosition().y);
+		bullet.setScale(sf::Vector2f((std::time(NULL) % 2 == 1 ? (game.player->superBullet ? -8 : -1) : (game.player->superBullet ? 8 : 1)),(game.player->superBullet ? 12 : 1)));
+		mainWindow.draw(bullet);
 
+		for (sf::RectangleShape* eBullet : enemyManager.bullets) {
 
+			if (!texture.loadFromFile("bullet.png", sf::IntRect(0, 0, 33, 20)))
+			{
+				std::cout << "FAIL";
+			}
+			bullet.setTexture(texture);
+			bullet.setPosition(eBullet->getPosition().x + ((std::time(NULL) % 2 == 1 ? 5 : 0)), eBullet->getPosition().y);
+			bullet.setScale(sf::Vector2f((std::time(NULL) % 2 == 1 ? -1 : 1), 1));
+			mainWindow.draw(bullet);
+		}
+
+		//Enemy sprites
 		for (CEnemy* enemy : enemyManager.enemies) {
-			sf::Texture texture;
 
 			if (enemy->type == "top") {
-				if (!texture.loadFromFile("top.png", sf::IntRect(0, 0, 20, 20)))
-				{
-					std::cout << "FAIL";
-				}
+				enemy->sprite->setTexture(game.topTex);
 			}
 			else if (enemy->type == "middle") {
-				if (!texture.loadFromFile("middle.png", sf::IntRect(0, 0, 20, 20)))
-				{
-					std::cout << "FAIL";
-				}
+				enemy->sprite->setTexture(game.middleTex);
 			}
 			else if (enemy->type == "bottom") {
-				if (!texture.loadFromFile("bottom.png", sf::IntRect(0, 0, 20, 20)))
-				{
-					std::cout << "FAIL";
-				}
+				enemy->sprite->setTexture(game.bottomTex);
 			}
 			else if (enemy->type == "mystery") {
-				if (!texture.loadFromFile("mystery.png", sf::IntRect(0, 0, 46, 20)))
-				{
-					std::cout << "FAIL";
-				}
+				enemy->sprite->setTexture(game.mysteryTex);
 			}
-			enemy->sprite->setTexture(texture);
+			
 			enemy->sprite->setPosition(enemy->trans->getPosition());
 
 			mainWindow.draw(*(enemy->sprite));
@@ -735,8 +802,6 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 
 		highscoreWindow.display();
 	}
-
-
 
 	if(mainWindow.getSize() != sf::Vector2u(800, 600)) mainWindow.setSize(sf::Vector2u(800, 600));
 	if (debugWindow.getSize() != sf::Vector2u(300, 600)) debugWindow.setSize(sf::Vector2u(300, 600));

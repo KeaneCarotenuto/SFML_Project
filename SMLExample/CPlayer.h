@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "CEnemyManager.h"
 #include "CGame.h"
 
@@ -42,10 +43,13 @@ public:
 	void MoveRight();
 	void MoveLeft();
 
-	void CheckBulletCollision(CEnemyManager* _eManager);
+	void CheckCollision(CEnemyManager* _eManager);
 	void MoveBullet();
 
 	void RemoveLife();
 	void AddLife();
 	void AddScore(int _score);
+
+	void ShootSound();
+	void KillSound();
 };
