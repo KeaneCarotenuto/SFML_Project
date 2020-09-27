@@ -7,23 +7,24 @@ CPlayer::CPlayer(sf::RectangleShape* _rect, sf::RectangleShape* _bullet) :
 
 void CPlayer::CreateWalls()
 {
+	//Clear all walls first
 	for (sf::RectangleShape* wall : walls) {
 		delete wall;
 	}
 	walls.clear();
 
+	//Create walls
 	for (int i = 0; i < 4; i++) {
 		for (int y = 0; y < wallHeight; y++) {
 			for (int x = 0; x < wallWidth; x++) {
 				if (wallShape[y][x]) {
-					for (int r = 0; r < 5; r++) {
-						for (int c = 0; c < 5; c++) {
+					for (int r = 0; r < 5; r++) { //How many wall pieces per segment (width)
+						for (int c = 0; c < 5; c++) { //How many wall pieces per segment (height)
 							sf::RectangleShape* tempWall = new sf::RectangleShape;
-							tempWall->setSize(sf::Vector2f(3.0f, 3.0f));
+							tempWall->setSize(sf::Vector2f(3.0f, 3.0f)); //Size of wall piece
 							tempWall->setFillColor(sf::Color::Green);
 							tempWall->setPosition((float)(100 + (i * 175) + (x * 15) + (r * 3)), (float)( 470 + (y * 15) + (c * 3)));
 							walls.push_back(tempWall);
-							//game->gameDraw.push_back(tempWall);
 						}
 					}
 				}
@@ -47,8 +48,10 @@ float Distance(int x1, int y1, int x2, int y2)
 	return sqrt((float)(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0));
 }
 
-void CPlayer::CheckCollision(CEnemyManager* _eManager)
+//The main collosion check for the game.
+void CPlayer::CheckCollision()
 {
+	//Player bullet collosion
 	if (bullet != nullptr) {
 
 		if (bullet->getPosition().y < 0) {
@@ -56,12 +59,14 @@ void CPlayer::CheckCollision(CEnemyManager* _eManager)
 			bullet->setPosition(-100, -100);
 		}
 
-		
+		//Walls
 		for (sf::RectangleShape* wall : walls) {
+			//Player bullet with walls
 			if (wall->getGlobalBounds().intersects(bullet->getGlobalBounds())) {
 
 				std::vector<sf::RectangleShape*> toDel;
 
+				//Manages the size of explosion and chance of wall being destroyed, gives random explosions
 				for (sf::RectangleShape* _2ndwall : walls) {
 
 					float distance = Distance((int)wall->getPosition().x, (int)wall->getPosition().y, (int)_2ndwall->getPosition().x, (int)_2ndwall->getPosition().y);
@@ -85,6 +90,7 @@ void CPlayer::CheckCollision(CEnemyManager* _eManager)
 				break;
 			}
 
+			//Enemy bullets with walls
 			for (sf::RectangleShape* _bullet : game->enemyManager->bullets) {
 				if (wall->getGlobalBounds().intersects(_bullet->getGlobalBounds())) {
 
@@ -116,7 +122,8 @@ void CPlayer::CheckCollision(CEnemyManager* _eManager)
 
 		std::vector<CEnemy*> toDel;
 
-		for (CEnemy* _enemy : _eManager->enemies) {
+		//Player Bullets and enemies
+		for (CEnemy* _enemy : game->enemyManager->enemies) {
 			if (_enemy == nullptr) {
 				continue;
 			}
@@ -152,14 +159,15 @@ void CPlayer::CheckCollision(CEnemyManager* _eManager)
 		}
 
 		for (CEnemy* _enemy : toDel) {
-			std::vector<CEnemy*>::iterator pos = std::find(_eManager->enemies.begin(), _eManager->enemies.end(), _enemy);
+			std::vector<CEnemy*>::iterator pos = std::find(game->enemyManager->enemies.begin(), game->enemyManager->enemies.end(), _enemy);
 			if (true) {
-				_eManager->enemies.erase(pos);
+				game->enemyManager->enemies.erase(pos);
 				delete _enemy;
 			}
 		}
 	}
 
+	//Enemy bullets and walls
 	for (sf::RectangleShape* _bullet : game->enemyManager->bullets) {
 		if (_bullet != nullptr) {
 			if (rect->getGlobalBounds().intersects(_bullet->getGlobalBounds())) {
@@ -171,32 +179,14 @@ void CPlayer::CheckCollision(CEnemyManager* _eManager)
 			}
 		}
 	}
-
-
-	/*std::vector<sf::RectangleShape*> toDel;
-
-	for (CEnemy* _enemy : game->enemyManager->enemies) {
-		for (sf::RectangleShape* wall : walls) {
-			if (wall->getGlobalBounds().intersects(_enemy->trans->getGlobalBounds())) {
-				toDel.push_back(wall);
-			}
-		}
-	}
-
-	for (sf::RectangleShape* _wall : toDel) {
-		std::vector<sf::RectangleShape*>::iterator pos = std::find(walls.begin(), walls.end(), _wall);
-		if (pos != walls.end()) {
-			walls.erase(pos);
-			delete _wall;
-		}
-	}*/
 }
 
+//Moves player bullets
 void CPlayer::MoveBullet()
 {
 	float speed = (superBullet ? -30 : (float)-bulletSpeed);
 
-	if (seekingBullet) {
+	if (seekingBullet) { // not used, but cool idea!
 		//game->enemyManager->enemies
 	}
 
@@ -205,6 +195,7 @@ void CPlayer::MoveBullet()
 	}
 }
 
+//Manages removing a life from the player and updating it
 void CPlayer::RemoveLife()
 {
 	game->player->lives -= 1;
@@ -256,18 +247,21 @@ void CPlayer::RemoveLife()
 	}
 }
 
+//same, but for adding!
 void CPlayer::AddLife()
 {
 	game->player->lives += 1;
 	dynamic_cast<sf::Text&> (*game->gameDraw[game->G_Lives]).setString("Lives: " + std::to_string(game->player->lives));
 }
 
+//Debug option
 void CPlayer::AddScore(int _score)
 {
 	game->player->score += _score;
 	dynamic_cast<sf::Text&> (*game->gameDraw[game->G_Score]).setString("Score: " + std::to_string(game->player->score));
 }
 
+//Sounds
 void CPlayer::ShootSound() {
 	game->shootSound.setBuffer(game->shootBuffer);
 	game->shootSound.play();

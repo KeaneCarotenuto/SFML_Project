@@ -9,7 +9,4 @@ public:
 	sf::RectangleShape* rect;
 	sf::Text* text;
 	void(*function)();
-
-private:
-
 };

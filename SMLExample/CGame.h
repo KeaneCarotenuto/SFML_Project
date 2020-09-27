@@ -12,8 +12,10 @@ class CPlayer;
 class CGame
 {
 public:
+	//List of items to draw on a frame (cleared after every frame)
 	std::vector<sf::Drawable*> toDraw;
 
+	#pragma region Screen Options
 	std::vector<sf::Drawable*> MenuDraw;
 	enum MenuOptions {
 		M_Title,	
@@ -80,24 +82,27 @@ public:
 		G_Score
 
 	};
+ #pragma endregion
 
-	
-
+	//Window Pointers
 	sf::Window* mainWindow = NULL;
 	sf::Window* debugWindow = NULL;
 	sf::Window* highscoreWindow = NULL;
 
+	//Player and enemies
 	CPlayer *player = nullptr;
 	CEnemyManager *enemyManager = nullptr;
 
+	//Pixel Font
 	sf::Font MyFont;
 
+	//Game sprites
 	sf::Texture topTex;
 	sf::Texture middleTex;
 	sf::Texture bottomTex;
 	sf::Texture mysteryTex;
-
 	
+	//Sounds
 	sf::SoundBuffer shootBuffer;
 	sf::Sound shootSound;
 
@@ -112,8 +117,10 @@ public:
 	int currentMusic = 0;
 	sf::Clock musicClock;
 
-	float step = (1.0f / 60.0f); // Modify this to change physics rate.
+	//FixedUpdate() call rate
+	float step = (1.0f / 60.0f);
 
+	//Program trackers
 	int state = 0;
 	int menuState = 2;
 	bool frozenMenu = false;
@@ -123,5 +130,6 @@ public:
 	int quitTimer = 3500;
 	int debugTimer = 2500;
 
+	//Settings
 	int volume = 100;
 };

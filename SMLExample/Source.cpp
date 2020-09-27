@@ -1,5 +1,6 @@
-#pragma warning(push)
+﻿#pragma warning(push)
 #pragma warning(disable : 26812)  //cannot change type to enum class as it is within sfml
+#pragma warning(disable : 4244)  //Loading Files give conversion warning
 
 #include <vector>
 #include <string>
@@ -27,17 +28,19 @@ int FixedUpdate();
 void Input();
 void CheckButtonsPressed();
 
+//Creating Text and Buttons to be displayed.
 void CreateText(std::string _string, int _fontSize, sf::Color _colour, sf::Text::Style _style, float _x, float _y, std::vector<sf::Drawable*>& vector);
 void CreateButton(void(*function)(), std::string _string, int _fontSize, sf::Color _tColour, sf::Text::Style _style, float _x, float _y, sf::Color _bgColour, float _padding);
 
 void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::RenderWindow& highscoreWindow);
 
+//Global game
 CGame game;
-CEnemyManager enemyManager;
 
 int main()
 {
-	
+	#pragma region Window Creation
+	//Creating Different Windows
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Space Invaders - By Keane Carotenuto");
 
 	sf::RenderWindow debugWindow(sf::VideoMode(300, 600), "DEBUG WINDOW");
@@ -46,21 +49,23 @@ int main()
 	sf::RenderWindow highscoreWindow(sf::VideoMode(300, 600), "HIGHSCORES");
 	highscoreWindow.setPosition(sf::Vector2i(window.getPosition().x - highscoreWindow.getSize().x, window.getPosition().y));
 
-
 	game.mainWindow = &window;
 	game.debugWindow = &debugWindow;
 	game.highscoreWindow = &highscoreWindow;
 
+	//Hide Debug
 	debugWindow.setVisible(false);
 
+
+	//Fixed Frame Rate
 	window.setFramerateLimit(60);
-	//window.setVerticalSyncEnabled(true);
+	#pragma endregion
 
 	Start();
 
+	//Manages the FixedUpdate() timing
 	float stepTime = 0;
 	bool drawn = false;
-
 	sf::Clock clock;
 
 	while (window.isOpen() == true)
@@ -70,12 +75,14 @@ int main()
 
 		while (stepTime >= game.step)
 		{
+			//Main Loop of Game
 			if (FixedUpdate() == 0) return 0;
 
 			stepTime -= game.step;
 			drawn = false;
 		}
 
+		//Draws After Updates
 		if (drawn)
 		{
 			//sf::sleep(sf::seconds(0.01f));
@@ -87,11 +94,12 @@ int main()
 			drawn = true;
 		}
 
+		//Buttons work outside of fixed update (sorta)
 		CheckButtonsPressed();
-
 
 		sf::Event newEvent;
 
+		//Quit
 		while (window.pollEvent(newEvent))
 		{
 			if (newEvent.type == sf::Event::Closed)
@@ -100,6 +108,7 @@ int main()
 			}
 		}
 
+		//Hide
 		while (debugWindow.pollEvent(newEvent))
 		{
 			if (newEvent.type == sf::Event::Closed)
@@ -112,7 +121,8 @@ int main()
 	return 0;
 }
 
-
+#pragma region Button Functions
+//Simple Global Functions to be used only for the Buttons
 void AddLife() {
 	game.player->AddLife();
 }
@@ -142,15 +152,20 @@ void SpawnMysteryShip() {
 void RepairWalls() {
 	game.player->CreateWalls();
 }
-
+#pragma endregion
 
 void Start() {
-	// Load from a font file on disk
+	//Seed for rand
+	srand((unsigned)time(NULL));
+
+	#pragma region Loading Files
+	// Loads files from folder once, and stores them in game
 	if (!game.MyFont.loadFromFile("uni.ttf")) std::cout << "Failed To Load Font \n";
 	if (!game.shootBuffer.loadFromFile("shoot.wav")) std::cout << "Failed To Load Sound \n";
 	if (!game.killBuffer.loadFromFile("invaderkilled.wav")) std::cout << "Failed To Load Sound \n";
 	if (!game.explodeBuffer.loadFromFile("explosion.wav")) std::cout << "Failed To Load Sound \n";
 
+	//Game music
 	for (int i = 1; i <= 4; i++) {
 		sf::SoundBuffer* temp =  new sf::SoundBuffer;
 		game.musicBuffer.push_back(temp);
@@ -161,11 +176,13 @@ void Start() {
 	}
 	game.musicSound.setBuffer(*game.musicBuffer[0]);
 
+	//Volume for all sounds
 	game.musicSound.setVolume((float)game.volume / 4);
 	game.shootSound.setVolume((float)game.volume / 4);
 	game.killSound.setVolume((float)game.volume / 4);
 	game.explodeSound.setVolume((float)game.volume / 4);
 
+	//Loads textures for sprites
 	if (!game.topTex.loadFromFile("top.png", sf::IntRect(0, 0, 20, 20)))
 	{
 		std::cout << "FAIL";
@@ -185,11 +202,11 @@ void Start() {
 	{
 		std::cout << "FAIL";
 	}
-	
+	#pragma endregion
 
-	srand((unsigned)time(NULL));
-
-	game.enemyManager = &enemyManager;
+	#pragma region Creating Game Assests
+	//Create enemy manager
+	game.enemyManager = new CEnemyManager();
 
 	//Create Player
 	game.player = new CPlayer(new sf::RectangleShape, new sf::RectangleShape);
@@ -202,18 +219,24 @@ void Start() {
 	game.player->bullet->setPosition(-100, -100);
 	game.player->game = &game;
 
+	//Creating walls
+	game.player->CreateWalls();
 
-	enemyManager.CreateAllEnemies();
+	//Create all aliens
+	game.enemyManager->CreateAllEnemies();
 
+	//Create all alien bullets
 	for (int i = 0; i < 3; i++) {
 		sf::RectangleShape* tempBullet = new sf::RectangleShape;
 		tempBullet->setSize(sf::Vector2f(5.0f, 20.0f));
 		tempBullet->setFillColor(sf::Color::White);
 		tempBullet->setPosition(-100, -200);
-		enemyManager.bullets.push_back(tempBullet);
+		game.enemyManager->bullets.push_back(tempBullet);
 	}
+	#pragma endregion
 
-
+	#pragma region Buttons
+	//Creates debug buttons
 	CreateButton(nullptr, "Debug Buttons", 25, sf::Color::White, sf::Text::Style::Regular, 20, 10, sf::Color::Black, 0);
 	CreateButton(&AddLife, "Add Life", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 60, sf::Color::White, 5);
 	CreateButton(&AddScore, "Add Score", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 90, sf::Color::White, 5);
@@ -222,9 +245,9 @@ void Start() {
 	CreateButton(&SuperBullets, "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 180, sf::Color::White, 5);
 	CreateButton(&SpawnMysteryShip, "Spawn Mystery", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 210, sf::Color::White, 5);
 	CreateButton(&RepairWalls, "Repair Walls", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 240, sf::Color::White, 5);
+	#pragma endregion
 
-
-#pragma region "Menu Drawables"
+	#pragma region "Menu Drawables"
 	//Title
 	CreateText("Space Invaders", 55, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.MenuDraw);
 	//Subtitle
@@ -237,9 +260,9 @@ void Start() {
 	CreateText("Credits", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.MenuDraw);
 	//Exit
 	CreateText("Exit", 30, sf::Color::White, sf::Text::Style::Regular, 30, 300, game.MenuDraw);
-#pragma endregion
+	#pragma endregion
 
-#pragma region "Options Drawables"
+	#pragma region "Options Drawables"
 	//Title
 	CreateText("Options", 55, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.OptionsDraw);
 	//Subtitle
@@ -249,8 +272,8 @@ void Start() {
 	//Return
 	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.OptionsDraw);
 
-	CreateText("Controls: ", 40, sf::Color::White, sf::Text::Style::Regular, 30, 280, game.OptionsDraw);
 
+	CreateText("Controls: ", 40, sf::Color::White, sf::Text::Style::Regular, 30, 280, game.OptionsDraw);
 	int _y = 340;
 	CreateText("Menus: ", 25, sf::Color::White, sf::Text::Style::Regular, (float)400, (float)_y, game.OptionsDraw);
 	CreateText("-Up/Down Keys to Move \nSelection", 20, sf::Color::White, sf::Text::Style::Regular, (float)400, (float)_y + 30, game.OptionsDraw);
@@ -261,9 +284,9 @@ void Start() {
 	CreateText("-Space to Shoot", 20, sf::Color::White, sf::Text::Style::Regular, (float)30, (float)_y + 90, game.OptionsDraw);
 	CreateText("-Hold Escape to return to Menu", 20, sf::Color::White, sf::Text::Style::Regular, (float)30, (float)_y + 120, game.OptionsDraw);
 	CreateText("-Hold Tab to Open to Debug", 20, sf::Color::White, sf::Text::Style::Regular, (float)30, (float)_y + 150, game.OptionsDraw);
-#pragma endregion
+	#pragma endregion
 
-#pragma region "Credits Drawables"
+	#pragma region "Credits Drawables"
 	//Title
 	CreateText("Credits", 50, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.CreditsDraw);
 	//Subtitle
@@ -274,9 +297,9 @@ void Start() {
 	CreateText("Sound: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.CreditsDraw);
 	//Return
 	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.CreditsDraw);
-#pragma endregion
+	#pragma endregion
 
-#pragma region "End Screen Drawables"
+	#pragma region "End Screen Drawables"
 	//Title
 	CreateText("Game Over", 50, sf::Color::Red, sf::Text::Style::Bold, 30, 30, game.EndScreenDraw);
 	//Subtitle
@@ -287,29 +310,34 @@ void Start() {
 	CreateText("Your Score: " + std::to_string(game.player->score), 30, sf::Color::White, sf::Text::Style::Bold, 30, 200, game.EndScreenDraw);
 	//Return
 	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 280, game.EndScreenDraw);
-#pragma endregion
+	#pragma endregion
 
-#pragma region "Highscore Drawables"
+	#pragma region "Highscore Drawables"
 	//Title
 	CreateText("HighScores", 40, sf::Color::White, sf::Text::Style::Bold, 10, 30, game.HighscoreDraw);
-	//Subtitle
+	//Your score
 	CreateText("Your Score: " + std::to_string(game.player->score), 20, sf::Color::White, sf::Text::Style::Bold, 10, 90, game.HighscoreDraw);
-	//Credit1
+	//top10
 	CreateText("Top 10 Scores:", 18, sf::Color::Color(180, 180, 180, 255), sf::Text::Style::Underlined, 10, 150, game.HighscoreDraw);
-	//Credit2
+	//all highscore
 	CreateText("", 20, sf::Color::White, sf::Text::Style::Regular, 10, 180, game.HighscoreDraw);
-#pragma endregion
+	#pragma endregion
 
+	#pragma region Game Text
+	//In Game Text
 	CreateText("Lives: " + std::to_string(game.player->lives), 20, sf::Color::Green, sf::Text::Style::Bold, 300, 10, game.gameDraw);
 	CreateText("Score: " + std::to_string(game.player->score), 20, sf::Color::Green, sf::Text::Style::Bold, 30, 10, game.gameDraw);
 	CreateText("Debug: TAB\nExit: ESC", 15, sf::Color::Color(125,125,125,255), sf::Text::Style::Regular, 680, 550, game.gameDraw);
-
-	game.player->CreateWalls();
+	#pragma endregion
 }
 
+//The main function of the game that is executed at a fixed rate, and attempts to catch up before drawing.
+//makes game preditctable with different processing speeds.
 int FixedUpdate() {
 	game.toDraw.clear();
+	CheckButtonsPressed();
 
+	//Main switch case to manage what screen is displayed
 	switch (game.state)
 	{
 	case 0:
@@ -340,14 +368,14 @@ int FixedUpdate() {
 	return 1;
 }
 
+#pragma region Main Screens
+//Menu Screen
 void Menu() {
 	//Adds menu items to draw list
 	for (sf::Drawable* item : game.MenuDraw)
 	{
 		game.toDraw.push_back(item);
 	}
-
-	CheckButtonsPressed();
 
 	//Moving Selection with Keys (frozen menu is used to move only one option at a time)
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -364,7 +392,7 @@ void Menu() {
 		game.frozenMenu = false;
 	}
 
-	//Set All To White, Except Selected, Which is Green
+	//Set All options To White, Except Selected, Which is Green
 	for (int i = game.M_PlayText; i <= game.M_Exit; i++)
 	{
 		dynamic_cast<sf::Text&> (*game.MenuDraw[i]).setFillColor(sf::Color::White);
@@ -372,7 +400,7 @@ void Menu() {
 	dynamic_cast<sf::Text&> (*game.MenuDraw[game.menuState]).setFillColor(sf::Color::Green);
 
 
-	//Checks what option to choose when user 
+	//Checks what option to choose when user hits enter
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		if (!game.frozenEnter) {
@@ -380,6 +408,7 @@ void Menu() {
 			switch (game.menuState)
 			{
 			case game.M_PlayText:
+				//Set-up before the game starts (for starting new games)
 				game.state = 10;
 				game.player->score = -1; game.player->AddScore(1);
 				game.player->lives = 2; game.player->AddLife();
@@ -406,13 +435,13 @@ void Menu() {
 				break;
 			}
 		}
-
 	}
 	else {
 		game.frozenEnter = false;
 	}
 }
 
+//Options Screen
 void Options() {
 	//Adds options items to draw list
 	for (sf::Drawable* item : game.OptionsDraw)
@@ -443,8 +472,7 @@ void Options() {
 	dynamic_cast<sf::Text&> (*game.OptionsDraw[game.menuState]).setFillColor(sf::Color::Green);
 
 
-	//Checks what option to choose when user 
-
+	//Checks what option to choose when user hits enter
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		if (!game.frozenEnter) {
@@ -458,7 +486,6 @@ void Options() {
 				game.killSound.setVolume((float)game.volume / 4);
 				game.musicSound.setVolume((float)game.volume / 4);
 				game.explodeSound.setVolume((float)game.volume / 4);
-
 				break;
 
 			default:
@@ -483,8 +510,7 @@ void Credits() {
 
 	dynamic_cast<sf::Text&> (*game.CreditsDraw[game.menuState]).setFillColor(sf::Color::Green);
 
-	//Checks what option to choose when user 
-
+	//Checks what option to choose when user hits enter
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		if (!game.frozenEnter) {
@@ -497,13 +523,16 @@ void Credits() {
 	}
 }
 
+//Clamp function used for code below, never needed for anything else, so I kept it here ¯\_(ツ)_/¯
 float Clamp(float a, float b, float c) {
 	if (a < b) return b;
 	else if (a > c) return c;
 	else return a;
 }
 
+//The actual gameplay screen
 void Game() {
+	//Manages the game music sound to play at set rate based on alien speed
 	if (game.musicSound.getPlayingOffset().asMilliseconds() <= 0 && game.musicClock.getElapsedTime().asSeconds() > (1.2f -   Clamp(std::abs(game.enemyManager->speed) / 5, 0, 1))) {
 		game.musicClock.restart();
 		game.currentMusic++;
@@ -514,18 +543,20 @@ void Game() {
 		game.musicSound.play();
 	}
 
-	game.player->CheckCollision(&enemyManager);
+	//frame checks and movement
+	game.player->CheckCollision();
 	game.player->MoveBullet();
-	enemyManager.MoveEnemies();
-	enemyManager.MoveBullet();
+	game.enemyManager->MoveEnemies();
+	game.enemyManager->MoveBullet();
 	
-
+	//If aliens reach bottom, remove all lives
 	if (game.enemyManager->atBot) {
 		while (game.player->lives > 0) {
 			game.player->RemoveLife();
 		}
 	}
 
+	//Draw Walls, and text
 	for (sf::RectangleShape* item : game.player->walls) {
 		game.toDraw.push_back(item);
 	}
@@ -534,9 +565,11 @@ void Game() {
 		game.toDraw.push_back(item);
 	}
 
+	//Check for input
 	Input();
 }
 
+//Loss Screen
 void EndScreen() {
 
 	//Adds options items to draw list
@@ -552,8 +585,7 @@ void EndScreen() {
 
 	dynamic_cast<sf::Text&> (*game.EndScreenDraw[game.menuState]).setFillColor(sf::Color::Green);
 
-	//Checks what option to choose when user 
-
+	//Checks what option to choose when user hits enter
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		if (!game.frozenEnter) {
@@ -566,21 +598,21 @@ void EndScreen() {
 		game.frozenEnter = false;
 	}
 }
+#pragma endregion
 
-
-
-
+#pragma region User Input
+//Check for user input during game (sorry I didnt put this stuff in functions, I got lazy)
 void Input() {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
-		// left key is pressed: move our character
 		game.player->MoveRight();
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
-		// left key is pressed: move our character
 		game.player->MoveLeft();
 	}
+
+	//Shooting (spoiler, I never delete or create new bullets, I just move them off screen bc I thought it would be easier at the time)
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && game.player->canShoot)
 	{
 		game.player->ShootSound();
@@ -588,10 +620,13 @@ void Input() {
 		game.player->bullet->setPosition(game.player->rect->getPosition().x + game.player->rect->getLocalBounds().width/2 - 2.5f, game.player->rect->getPosition().y - 20);
 		game.player->bulletsShot++;
 
+		//Spawn mystery after some shots (is this how it worked in the original? I dont know...)
 		if (game.player->bulletsShot == 23 || (game.player->bulletsShot > 23 && (game.player->bulletsShot - 23) % 15 == 0)) {
 			game.enemyManager->SpawnMystery(std::rand() % 2);
 		}
 	}
+
+	//Holding escape quits
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 	{
 		CreateText("Hold Escape for  " + std::to_string(game.quitTimer / 1000) + "s  To Quit", 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
@@ -602,6 +637,8 @@ void Input() {
 	else {
 		game.quitTimer = 3500;
 	}
+
+	//Holding tab opens debug menu
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab))
 	{
 		CreateText("Hold Tab for  " + std::to_string(game.debugTimer / 1000) + "s  To Open Debug", 20, sf::Color::White, sf::Text::Style::Regular, 10, 570, game.toDraw);
@@ -616,6 +653,7 @@ void Input() {
 	}
 }
 
+//Check if the user has clicked a button, then perform its function
 void CheckButtonsPressed() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 		if (!game.frozenClick) {
@@ -628,6 +666,7 @@ void CheckButtonsPressed() {
 				float bW = _button->rect->getSize().x;
 				float bH = _button->rect->getSize().y;
 
+				//If click, do func
 				if (mX >= bX && mY >= bY && mX <= (bX + bW) && mY < (bY + bH)) {
 					if (_button->function != nullptr) _button->function();
 				}
@@ -639,7 +678,10 @@ void CheckButtonsPressed() {
 		game.frozenClick = false;
 	}
 }
+#pragma endregion
 
+#pragma region UI Creation
+//A function that creates some text from parameters, then pushes it to a vector
 void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _colour = sf::Color::White, sf::Text::Style _style = sf::Text::Style::Regular, float _x = 100, float _y = 100, std::vector<sf::Drawable*>& vector = game.toDraw) {
 	sf::Text* tempText = new sf::Text;
 	tempText->setString(_string);
@@ -650,7 +692,7 @@ void CreateText(std::string _string = "Temp", int _fontSize = 20, sf::Color _col
 	vector.push_back(tempText);
 }
 
-//std::string _string, int _fontSize, sf::Color _tColour, sf::Text::Style _style, float _x , float _y, sf::Color _bgColour, float _padding
+//A Function that creates buttons with functions, then pushes it to a vector
 void CreateButton(void(*function)(), std::string _string = "Temp", int _fontSize = 20, sf::Color _tColour = sf::Color::White, sf::Text::Style _style = sf::Text::Style::Regular, float _x = 100, float _y = 100, sf::Color _bgColour = sf::Color::Black, float _padding = 10) {
 	sf::Text* tempText = new sf::Text;
 	tempText->setString(_string);
@@ -668,8 +710,12 @@ void CreateButton(void(*function)(), std::string _string = "Temp", int _fontSize
 	CButton* button = new CButton(buttonRect, tempText, function);
 	game.Buttons.push_back(button);
 }
+#pragma endregion
 
+//Drawing everything on screen
 void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::RenderWindow& highscoreWindow) {
+
+	#pragma region Main Window Draw
 	mainWindow.clear();
 
 	for (sf::Drawable* item : game.toDraw)
@@ -681,13 +727,12 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 		mainWindow.draw((*item));
 	}
 
-
-	//I know that this is a stupid way to do it... I added sprites at the end, and you need to load the texture before you use draw it in the given scope.. So I had to do this...
-	//I think I could have created a 'new sf::Sprite' and assigned that? but its too late now...
+	//I know that this is a stupid way to do it... I added sprites at the end, and you need to set the texture before you use draw it in the given scope.. So I had to do this...
 	//I could also turn these into functions... but... oh well.
+	//Loading during game is expensive, I know, but again, last minute addition
 	if (game.state == 10) {
 
-		//Player Sp[rite
+		//Player Sprite
 		sf::Texture texture;
 		if (!texture.loadFromFile("player.png", sf::IntRect(0, 0, 33, 20)))
 		{
@@ -708,7 +753,7 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 		bullet.setScale(sf::Vector2f((std::time(NULL) % 2 == 1 ? (game.player->superBullet ? -8 : -1) : (game.player->superBullet ? 8 : 1)),(game.player->superBullet ? 12 : 1)));
 		mainWindow.draw(bullet);
 
-		for (sf::RectangleShape* eBullet : enemyManager.bullets) {
+		for (sf::RectangleShape* eBullet : game.enemyManager->bullets) {
 
 			if (!texture.loadFromFile("bullet.png", sf::IntRect(0, 0, 33, 20)))
 			{
@@ -721,7 +766,7 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 		}
 
 		//Enemy sprites
-		for (CEnemy* enemy : enemyManager.enemies) {
+		for (CEnemy* enemy : game.enemyManager->enemies) {
 
 			if (enemy->type == "top") {
 				enemy->sprite->setTexture(game.topTex);
@@ -742,9 +787,11 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 		}
 	}
 
+	//Update main window
 	mainWindow.display();
+#pragma endregion
 
-
+	#pragma region Debug Window Draw
 	if (debugWindow.isOpen()) {
 		debugWindow.clear();
 
@@ -764,7 +811,9 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 
 		debugWindow.display();
 	}
+	#pragma endregion
 
+	#pragma region Highscore Window Draw
 	if (highscoreWindow.isOpen()) {
 
 		highscoreWindow.clear();
@@ -802,7 +851,9 @@ void Draw(sf::RenderWindow& mainWindow, sf::RenderWindow& debugWindow, sf::Rende
 
 		highscoreWindow.display();
 	}
+	#pragma endregion
 
+	//Moves windows if they arent in the right spot
 	if(mainWindow.getSize() != sf::Vector2u(800, 600)) mainWindow.setSize(sf::Vector2u(800, 600));
 	if (debugWindow.getSize() != sf::Vector2u(300, 600)) debugWindow.setSize(sf::Vector2u(300, 600));
 	if (highscoreWindow.getSize() != sf::Vector2u(300, 600)) highscoreWindow.setSize(sf::Vector2u(300, 600));

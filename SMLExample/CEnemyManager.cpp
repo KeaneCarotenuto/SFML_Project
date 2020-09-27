@@ -1,17 +1,19 @@
 #include "CEnemyManager.h"
 
-//5, 11, 100, 100, 500, 200
+//Defaults: 5, 11, 100, 100, 500, 200
 void CEnemyManager::CreateAllEnemies(int _rows, int _cols, float _startX, float _startY, float _width, float _height)
 {
+	//Delete all before creation
 	for (CEnemy* e : enemies)
 	{
 		delete e;
 	}
 	enemies.clear();
 	
-	
+	//reset speed
 	speed = abs(speed);
 
+	//Create Aliens
 	for (int row = 0; row < _rows; row++) {
 		for (int col = 0; col < _cols; col++) {
 			AddEnemy((int)(_startX + (col * (_width/_cols))), (int)(_startY + (row * (_height/_rows))), (row == 0 ? "top" : (row <= 2 ? "middle" : "bottom")), sf::Color::Red);
@@ -31,8 +33,10 @@ void CEnemyManager::SpawnMystery(bool left)
 	e->left = left;
 }
 
+//Manages the movement of all aliens
 void CEnemyManager::MoveEnemies()
 {
+	//Spawns new round if all are dead
 	if (enemies.empty()) {
 		CreateAllEnemies();
 		speed -= 0.4f;
@@ -43,6 +47,7 @@ void CEnemyManager::MoveEnemies()
 	for (CEnemy* item : enemies) {
 		if (item->trans->getPosition().y >= 550) {
 			atBot = true;
+			//Reached Player
 		}
 
 		if (item->type == "mystery") continue;
@@ -52,6 +57,7 @@ void CEnemyManager::MoveEnemies()
 		}
 	}
 
+	//Movement of Aliens
 	for (CEnemy* item : enemies) {
 		if (item->type == "mystery") {
 			item->trans->move((float)(item->left ? 2 : -2), 0);
@@ -81,6 +87,7 @@ void CEnemyManager::SpeedEnemies(float _amount)
 	speed /= _amount;
 }
 
+//Manages how aliens shoot
 void CEnemyManager::MoveBullet()
 {
 	for (sf::RectangleShape* _bullet : bullets) {
@@ -92,6 +99,7 @@ void CEnemyManager::MoveBullet()
 			float x;
 			float y;
 
+			//Makes sure mystery ship does not shoot
 			do
 			{
 				tries++;

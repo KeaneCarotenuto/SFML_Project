@@ -24,7 +24,8 @@ public:
 	static const int wallHeight = 3;
 	static const int wallWidth = 5;
 
-	bool wallShape[wallHeight][5] = {
+	//Can Draw the shape of the barriers using the code below (1 = wall, 0 = gap)
+	bool wallShape[wallHeight][wallWidth] = {
 		{0,1,1,1,0},
 		{1,1,1,1,1},
 		{1,1,0,1,1},
@@ -43,7 +44,7 @@ public:
 	void MoveRight();
 	void MoveLeft();
 
-	void CheckCollision(CEnemyManager* _eManager);
+	void CheckCollision();
 	void MoveBullet();
 
 	void RemoveLife();
