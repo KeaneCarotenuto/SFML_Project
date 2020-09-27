@@ -294,7 +294,7 @@ void Start() {
 	//Credit1
 	CreateText("Programmer: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 150, game.CreditsDraw);
 	//Credit2
-	CreateText("Sound: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.CreditsDraw);
+	CreateText("Sound: www.classicgaming.cc", 30, sf::Color::White, sf::Text::Style::Regular, 30, 200, game.CreditsDraw);
 	//Return
 	CreateText("Return", 30, sf::Color::White, sf::Text::Style::Regular, 30, 250, game.CreditsDraw);
 	#pragma endregion
