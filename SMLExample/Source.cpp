@@ -39,6 +39,11 @@ CGame game;
 
 int main()
 {
+
+	int row = 3;
+	std::string type = (row < 1 ? "top" : (row < 3 ? "middle" : "bottom"));
+
+
 	#pragma region Window Creation
 	//Creating Different Windows
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Space Invaders - By Keane Carotenuto");
@@ -238,13 +243,16 @@ void Start() {
 	#pragma region Buttons
 	//Creates debug buttons
 	CreateButton(nullptr, "Debug Buttons", 25, sf::Color::White, sf::Text::Style::Regular, 20, 10, sf::Color::Black, 0);
-	CreateButton(&AddLife, "Add Life", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 60, sf::Color::White, 5);
-	CreateButton(&AddScore, "Add Score", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 90, sf::Color::White, 5);
-	CreateButton(&SlowAliens, "Slow Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 120, sf::Color::White, 5);
-	CreateButton(&SpeedAliens, "Speed Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 150, sf::Color::White, 5);
-	CreateButton(&SuperBullets, "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 180, sf::Color::White, 5);
-	CreateButton(&SpawnMysteryShip, "Spawn Mystery", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 210, sf::Color::White, 5);
-	CreateButton(&RepairWalls, "Repair Walls", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 240, sf::Color::White, 5);
+	CreateButton(nullptr, "Click on options to use", 15, sf::Color::White, sf::Text::Style::Regular, 20, 50, sf::Color::Black, 0);
+	CreateButton(&AddLife, "Add Life", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 80, sf::Color::White, 5);
+	CreateButton(&AddScore, "Add Score", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 110, sf::Color::White, 5);
+	CreateButton(&SlowAliens, "Slow Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 140, sf::Color::White, 5);
+	CreateButton(&SpeedAliens, "Speed Aliens", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 170, sf::Color::White, 5);
+	CreateButton(&SuperBullets, "Super Bullets", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 200, sf::Color::White, 5);
+	CreateButton(&SpawnMysteryShip, "Spawn Mystery", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 230, sf::Color::White, 5);
+	CreateButton(&RepairWalls, "Repair Walls", 15, sf::Color::Black, sf::Text::Style::Regular, 20, 260, sf::Color::White, 5);
+
+	
 	#pragma endregion
 
 	#pragma region "Menu Drawables"
@@ -289,7 +297,7 @@ void Start() {
 	#pragma region "Credits Drawables"
 	//Title
 	CreateText("Credits", 50, sf::Color::White, sf::Text::Style::Bold, 30, 30, game.CreditsDraw);
-	//Subtitle
+	//Subtitle 
 	CreateText("KeaneCarotenuto@gmail.com", 16, sf::Color::Color(180, 180, 180, 255), sf::Text::Style::Italic, 30, 100, game.CreditsDraw);
 	//Credit1
 	CreateText("Programmer: Keane Carotenuto", 30, sf::Color::White, sf::Text::Style::Regular, 30, 150, game.CreditsDraw);
@@ -657,6 +665,7 @@ void Input() {
 void CheckButtonsPressed() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 		if (!game.frozenClick) {
+
 			float mX = (float)sf::Mouse::getPosition(*game.debugWindow).x;
 			float mY = (float)sf::Mouse::getPosition(*game.debugWindow).y;
 			for (CButton* _button : game.Buttons)

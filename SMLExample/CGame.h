@@ -67,6 +67,7 @@ public:
 	std::vector<CButton*> Buttons;
 	enum ButtonsOptions {
 		B_Title,
+		B_Subtitle,
 		B_AddLife,
 		B_AddScore,
 		b_SpeedAliens,
